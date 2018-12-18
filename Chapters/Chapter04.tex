@@ -38,24 +38,103 @@ MPC has had some use within the epidemiological literature, the majority being f
 \section{Controlling an epidemic spreading on a network}
 \label{sec:ch4:Controlling}
 
-To demonstrate open-loop and MPC for epidemic management we use a stochastic SIR network model including host demography and risk structure. The model is deliberately kept simple to show how the underpinning idea is broadly applicable across human, animal and plant diseases. Whilst the model and its parameters are arbitrary and do not represent a specific disease, we use it to represent a scenario in which a simulation model has already been fitted to a real disease system; the network model is therefore used here as a proxy for a potentially very detailed simulation model.
+To demonstrate open-loop and MPC for epidemic management we use a stochastic SIR network model including host demography and risk structure, and vaccination as a control method. The model is deliberately kept simple to show how the underpinning idea is broadly applicable across human, animal and plant diseases. Whilst the model and its parameters are arbitrary and do not represent a specific disease, we use it to represent a scenario in which a simulation model has already been fitted to a real disease system; the network model is therefore used here as a proxy for a potentially very detailed simulation model. The model itself includes features abstracted from metapopulation or network epidemic models as routinely used for plant, animal and human diseases \cite{rowthorn_optimal_2009, keeling_dynamics_2001, keeling_metapopulation_2000, margosian_connectivity_2009, bansal_individual_2007}.
 
-Both the open-loop and MPC frameworks require an approximate model with which optimisation using OCT is possible. In this chapter we will use two different levels of approximation to assess how this approximate model should be chosen. The resulting strategies using both open-loop and MPC will be tested against a Strategy Testing approach, where a limited number of plausible interventions that do not vary during the epidemic are tested on the simulation model. 
+Both the open-loop and MPC frameworks require an approximate model with which optimisation using OCT is possible. In this chapter we will use two different levels of approximation to assess how this approximate model should be chosen. The resulting strategies using both open-loop and MPC will be compared with a Strategy Testing approach, where a limited number of plausible interventions that do not vary during the epidemic are tested on the simulation model. 
 
-\subsection*{Simulation Model}
+\subsection{Simulation Model}
 
-In our model, infection spreads stochastically across a network  of nodes that are clustered into three distinct regions (figure 2a). Each node contains a host population stratified into high and low risk groups. The infection can spread between individuals within nodes and between connected nodes. The net rate of infection of risk group $r$ in node $i$ is given by:
+In the simulation mdoel, infection spreads stochastically across a network of nodes. Nodes are positioned randomly in three separate regions, with 20 nodes in regions A and C, and 15 nodes in region B (Figure~\ref{fig:ch4:node_structure}). The nodes are positioned such that no two nodes are closer than a predetermined threshold, here 0.2 spatial units. The connectivity between nodes within a region is calculated using an exponential kernel with a scale parameter $\alpha$ of 0.2 units ($\sigma_{ij} = \beta\mathrm{e}^{-d_{ij}/\alpha}$) where $d_{ij}$ is the distance between nodes $i$ and $j$. Between regions, three connections are made between the closest pairs of nodes in regions A and B, and B and C, with a coupling value of $0.1\beta$ for each. There are no connections between regions A and C(figure 2a).
+
+\begin{figure}[htb]
+    \begin{center}
+        \includegraphics[width=0.4\textwidth]{example-image-duck}%{Graphics/Ch4/Node_Structure}
+        \caption{The network used for the simulation model, including region labels. The epidemic is seeded in the red node in region A, and can spread between connected nodes (grey lines).}
+        \label{fig:ch4:node_structure}
+    \end{center}
+\end{figure}
+
+Each node initially contains a total of 30 hosts, stratified into high and low risk groups with different infection rates. On average 10\% of hosts within each node start in the high risk group. To give heterogeneity across the network the exact number for each node is chosen using a binomial trial. Each individual host can be in one of three active states: susceptible ($S$), infected ($I$) or vaccinated ($V$), or removed ($R$) by the disease (Figure~\ref{fig:ch4:model_structure}). The infection can spread between individuals within nodes and between connected nodes. The net rate of infection of risk group $r$ in node $i$ is given by:
 \begin{linenomath*}
     \begin{equation}
         S_i^r \sum_j \sigma_{ij} \left(\rho^{rH}I_j^H + \rho^{rL}I_j^L\right)\;,
-    \label{eqn:sim_model}
+    \label{eqn:ch4:sim_model}
     \end{equation}
 \end{linenomath*}
-where $S$ and $I$ are numbers of susceptible and infected hosts respectively, subscripts identify the node, and superscripts specify high ($H$) or low ($L$) risk group. The sum is over all connected nodes including the focal node itself, with the relative transmission strength into node $i$ from node $j$ given by $\sigma_{ij}$, and risk structure given by the \num{2x2} matrix $\rho$. Full details of the model are given in the supplementary material. Although not limited to these applications, the model in Equation~\ref{eqn:sim_model} could represent crop or livestock diseases spreading through farms, or sexually transmitted infections spreading through towns, cities or countries.
+where $S$ and $I$ are numbers of susceptible and infected hosts respectively. Throughout superscripts refer to the risk group (high: H, low: L), and subscripts identify the node. For example, $S_{3}^\mathrm{H}$ represents the total number of high risk susceptibles in node 3. In addition, we use $N$ to refer to the total number of active hosts, such that $N_{3}^\mathrm{H}$ is the number of susceptible, infected and vaccinated high risk hosts in node 3. The sum in Equation~\ref{eqn:ch4:sim_model} is over all connected nodes including the focal node itself, with the relative transmission strength into node $i$ from node $j$ given by $\sigma_{ij}$, and risk structure given by the \num{2x2} matrix $\rho$.
+
+\begin{figure}[htb]
+    \begin{center}
+        \includegraphics[width=0.4\textwidth]{example-image-duck}%{Graphics/Ch4/Model_Structure}
+        \caption{Diagram of host states and transitions. For transition rates see Table~\ref{tab:ch4:rates}}
+        \label{fig:ch4:model_structure}
+    \end{center}
+\end{figure}
+
 
 Mass vaccination is the only intervention we consider, with the potential to target based on both risk group and region but randomised across host infection status (i.e.\ the vaccine is given to all hosts but is only effective on susceptibles). Logistical and economic constraints are included through a maximum total vaccination rate ($\eta_{\mathrm{max}}$) that can be divided between risk groups and regions. Within each group susceptibles are vaccinated at rate: $f\eta_{\mathrm{max}}S/N$, where $f$ is the proportion of control allocated to that group, and $N$ is the total group population.
 
+Trajectories are simulated using the Gillespie direct method \cite{gillespie_exact_1977}. The possible events are host birth and death, infection, vaccination, and removal and recovery of infected hosts. These events and the associated rates are given in Table~\ref{tab:ch4:rates}. Parameters, as specified in Table~\ref{tab:ch4:parameters}, were chosen to give a large epidemic under no control intervention, spreading across all three regions. Typical simulation trajectories with no control are shown in Figure~\ref{fig:ch4:no_control_dpc}.
+
+\begin{figure}[htb]
+    \begin{center}
+        \includegraphics[width=0.4\textwidth]{example-image-duck}%{Graphics/Ch4/No_Control_DPC}
+        \caption{Ten typical simulation model trajectories with no control. Green and red lines represent susceptible and infected hosts respectively.}
+        \label{fig:ch4:no_control_dpc}
+    \end{center}
+\end{figure}
+
 Optimal allocation of the vaccination resources minimises an epidemic cost $J$ representing the disease burden of the epidemic across all infected hosts over the simulation time ($T$): $J = \int_{t=0}^TI(t)\mathrm{d}t$. In common with the particular control we consider and the risk and spatial structures, this simple choice of objective function was made merely to illustrate our methods, but the framework generalises immediately to more complex settings.
+
+\begin{table}[htb]
+    \begin{center}
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        \textbf{Event} & \textbf{State Change} & \textbf{Rate} \\
+        \midrule
+        Birth & $\emptyset \rightarrow S_i^r$ & $bN_i^r$\\
+        Death & $\{S_i^r,I_i^r,V_i^r\} \rightarrow \emptyset$ & $dN_i^r$ \\
+        Infection & $S_i^r \rightarrow I_i^r$ & $S_i^r\sum_{j,r'}\sigma_{ij}\rho^{rr'}I_j^{r'}$\\
+        Vaccination & $S_i^r \rightarrow V_i^r$ & $f_i^r\eta_{\textrm{max}}S_i^r / N_i^r$\\
+        Removal & $I_i^r \rightarrow \emptyset$ & $\mu{}I_i^r$\\
+        Recovery & $I_i^r \rightarrow S_i^r$ & $\nu{}I_i^r$\\
+        \bottomrule
+    \end{tabular}
+    \caption{Possible events in the simulation model with associated rates.}
+    \label{tab:ch4:rates}
+    \end{center}
+\end{table}
+        
+\begin{table}[htb]
+    \begin{center}
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        \textbf{Meaning} & \textbf{Parameter} & \textbf{Default Value} \\
+        \midrule
+        Birth Rate & $b$ & \SI{0.01}{\per\t}\\
+        Death Rate & $d$ & \SI{0.01}{\per\t}\\
+        Maximum Vaccination Rate & $\eta{}_\textrm{max}$ & \SI{200}{\hosts\per\t}\\
+        Removal Rate & $\mu$ & \SI{0.5}{\per\t}\\
+        Recovery Rate & $\nu$ & \SI{0.25}{\per\t}\\
+        Risk Coupling & $\left(\begin{smallmatrix}
+            \rho^{\mathrm{HH}}& \rho^{\mathrm{HL}}\\
+            \rho^{\mathrm{LH}}& \rho^{\mathrm{LL}}
+            \end{smallmatrix}\right)$ & $\left(\begin{smallmatrix}
+            \num{1.0}& \num{0.008}\\
+            \num{0.008}& \num{0.016}
+        \end{smallmatrix}\right)$\\
+        Spatial Coupling & $\sigma$ & \textit{see text}\\
+        Transmission Rate & $\beta$ & \SI{2.5}{\per\host\per\t}\\
+        \bottomrule
+    \end{tabular}
+    \caption{Parameter values used for simulation model trajectories.}
+    \label{tab:ch4:parameters}
+    \end{center}
+\end{table}
+
+\subsection{Approximate Models}
+
+Exhaustive optimisation of control using the simulation model, across space, risk group and time, is clearly very computationally expensive. To assess the best level of approximation, we consider two different deterministic approximate models of the simulator. The first model is purely risk structured, factoring out all spatial information and leaving one high risk and one low risk population group. This model is deterministic and based on the assumption that all nodes are spatially well-mixed with each other. The second approximate model is more complex, in as much as it is also deterministic and risk structured, but additionally includes a first approximation to the host spatial structure by including the regional host information. Spatial dynamics are included between but not within the three regions to maintain enough simplicity to obtain optimal control results, thereby assuming that nodes are spatially well-mixed within each region. This could represent, for example, optimising control at the country level, but not at the regional level. We refer to this model as the spatial approximate model. A single set of parameters is fitted for each model to data from an ensemble of simulation model runs. We then test which of the two approximate models is the more useful for control optimisation. Full details of the approximate models, fitting and optimisation procedures are given in the supplementary material.
 
 \section{Results}
 \label{sec:ch4:Results}
