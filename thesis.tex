@@ -72,12 +72,20 @@
 \usepackage{duckuments}
 \usepackage{booktabs}
 \usepackage{amsmath}
+\usepackage{placeins}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{float}
 
 \DeclareSIUnit\t{t}
 \DeclareSIUnit\hosts{hosts}
 \DeclareSIUnit\host{host}
 
 \renewcommand{\arraystretch}{1.5}
+
+\newcommand\todo[1]{\textcolor{red}{#1}}
+\newcommand\citationneeded{\textcolor{blue}{[citation needed]}}
+\newcommand{\etal}{\textit{et al}.}
 
 \hypersetup{					% setup the hyperref-package options
 	pdftitle={\thesisTitle},	% 	- title (PDF meta)
