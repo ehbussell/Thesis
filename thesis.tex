@@ -142,15 +142,21 @@
 %\input{content/chapter-concepts} % INCLUDE: concepts
 %\input{content/chapter-conclusion} % INCLUDE: conclusion
 
+\onehalfspacing
+
 \setcounter{chapter}{3}
 \input{Chapters/Chapter04}
-% \cleardoublepage
+\cleardoublepage
 
 % --------------------------
 % Back matter
 % --------------------------
 {%
 \setstretch{1.1}
+\DeclareFieldFormat
+  [article,inbook,incollection,inproceedings,patent,thesis,unpublished]
+  {title}{#1\isdot}
+\renewbibmacro{in:}{}
 \renewcommand{\bibfont}{\normalfont\small}
 \setlength{\biblabelsep}{0pt}
 \setlength{\bibitemsep}{0.5\baselineskip plus 0.5\baselineskip}
