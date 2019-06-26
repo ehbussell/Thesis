@@ -5,7 +5,7 @@
 	paper=A4,					% paper size --> A4 is default in Germany
 	twoside=true,				% onesite or twoside printing
 	openright,					% doublepage cleaning ends up right side
-	parskip=full,				% spacing value / method for paragraphs
+	parskip=half,				% spacing value / method for paragraphs
 	chapterprefix=true,			% prefix for chapter marks
 	10pt,						% font size
 	headings=normal,			% size of headings
@@ -24,36 +24,25 @@
 % **************************************************
 % Information and Commands for Reuse
 % **************************************************
-\newcommand{\thesisTitle}{Optimal Strategies for Disease Control in Regions Threatened by an Established Epidemic}
-\newcommand{\thesisName}{Elliott Bussell}
-\newcommand{\thesisSubject}{Documentation}
-% \newcommand{\thesisDate}{August 26, 2015}
+\newcommand{\thesisTitle}{Optimal strategies for disease control in regions threatened by an established epidemic}
+\newcommand{\thesisName}{Elliott Hamilton Bussell}
+\newcommand{\thesisSubject}{Epidemiology}
+\newcommand{\thesisCollege}{Jesus College}
+\newcommand{\thesisDate}{September 2019}
 % \newcommand{\thesisVersion}{My First Draft}
-
-% \newcommand{\thesisFirstReviewer}{Jane Doe}
-% \newcommand{\thesisFirstReviewerUniversity}{\protect{Clean Thesis Style University}}
-% \newcommand{\thesisFirstReviewerDepartment}{Department of Clean Thesis Style}
-
-% \newcommand{\thesisSecondReviewer}{John Doe}
-% \newcommand{\thesisSecondReviewerUniversity}{\protect{Clean Thesis Style University}}
-% \newcommand{\thesisSecondReviewerDepartment}{Department of Clean Thesis Style}
 
 \newcommand{\thesisFirstSupervisor}{Nik Cunniffe}
 \newcommand{\thesisSecondSupervisor}{Chris Gilligan}
 
 \newcommand{\thesisUniversity}{\protect{University of Cambridge}}
 \newcommand{\thesisUniversityDepartment}{Department of Plant Sciences}
-% \newcommand{\thesisUniversityInstitute}{Institut for Clean Thesis Dev}
-% \newcommand{\thesisUniversityGroup}{Clean Thesis Group (CTG)}
-% \newcommand{\thesisUniversityCity}{City}
-% \newcommand{\thesisUniversityStreetAddress}{Street address}
-% \newcommand{\thesisUniversityPostalCode}{Postal Code}
 
 % **************************************************
 % Load and Configure Packages
 % **************************************************
 \usepackage[utf8]{inputenc}		% defines file's character encoding
 \usepackage[english]{babel} % babel system, adjust the language of the content
+\usepackage[nodisplayskipstretch]{setspace}
 \usepackage[					% clean thesis style
 	figuresep=colon,%
 	sansserif=false,%
@@ -65,7 +54,9 @@
 	bibsys=bibtex,%
 	bibfile=References.bib,%
 	bibstyle=authoryear,%
-]{cleanthesis}
+]{my_cleanthesis}
+
+% \cthesissetcolor{cmyk}{1, .50, .10, .01}{.18, .0, .18, 0}%
 
 \usepackage{lineno}
 \usepackage[group-separator={,},group-minimum-digits={4}]{siunitx}
@@ -76,10 +67,38 @@
 \usepackage{algorithm}
 \usepackage{algorithmicx}
 \usepackage{float}
+\usepackage{subcaption}
+\usepackage[all]{hypcap}
+\usepackage{multirow}
+\usepackage{array}
 
 \DeclareSIUnit\t{t}
+\DeclareSIUnit\year{year}
+\DeclareSIUnit\years{years}
 \DeclareSIUnit\hosts{hosts}
 \DeclareSIUnit\host{host}
+\sisetup{detect-all = true}
+
+% Bibliography setup
+\DeclareFieldFormat[article]{titlecase}{\MakeSentenceCase*{#1}}
+\DeclareFieldFormat[book]{titlecase}{#1}
+\newbibmacro*{journal}{%
+  \iffieldundef{journaltitle}
+    {}
+    {\printtext[journaltitle]{%
+       \printfield[noformat]{journaltitle}%
+       \setunit{\subtitlepunct}%
+	   \printfield[noformat]{journalsubtitle}}}}
+\AtEveryBibitem{%
+	   \clearfield{number}}
+\DeclareFieldFormat[article]{volume}{\mkbibbold{#1}}
+\DeclareFieldFormat[article,inbook,incollection,inproceedings,patent,thesis,unpublished]{title}{#1\isdot}
+\renewbibmacro{in:}{}
+\renewcommand{\bibfont}{\normalfont\small}
+\setlength{\biblabelsep}{0pt}
+\setlength{\bibitemsep}{0.5\baselineskip plus 0.5\baselineskip}
+\renewbibmacro{in:}{%
+  \ifentrytype{article}{}{\printtext{\bibstring{in}\intitlepunct}}}
 
 \renewcommand{\arraystretch}{1.5}
 
@@ -87,21 +106,29 @@
 \newcommand\citationneeded{\textcolor{blue}{[citation needed]}}
 \newcommand{\etal}{\textit{et al}.}
 
+
+\usepackage{hyperref}
 \hypersetup{					% setup the hyperref-package options
-	pdftitle={\thesisTitle},	% 	- title (PDF meta)
-	pdfsubject={\thesisSubject},% 	- subject (PDF meta)
-	pdfauthor={\thesisName},	% 	- author (PDF meta)
-	plainpages=false,			% 	-
-	colorlinks=false,			% 	- colorize links?
-	pdfborder={0 0 0},			% 	-
-	breaklinks=true,			% 	- allow line break inside links
-	bookmarksnumbered=true,		%
-	bookmarksopen=true			%
+pdftitle={\thesisTitle},	% 	- title (PDF meta)
+pdfsubject={\thesisSubject},% 	- subject (PDF meta)
+pdfauthor={\thesisName},	% 	- author (PDF meta)
+plainpages=false,			% 	-
+colorlinks=false,			% 	- colorize links?
+pdfborder={0 0 0},			% 	-
+breaklinks=true,			% 	- allow line break inside links
+bookmarksnumbered=true,		%
+bookmarksopen=true			%
 }
+\usepackage{bookmark}
 
 % **************************************************
 % Document CONTENT
 % **************************************************
+\includeonly{Chapters/Chapter05}
+% To print only figures:
+% \usepackage[active, tightpage]{preview}
+% \PreviewBorder=12pt\relax
+% \PreviewSnarfEnvironment[{[]}]{figure}
 \begin{document}
 
 % --------------------------
@@ -113,62 +140,36 @@
 % --------------------------
 % Front matter
 % --------------------------
-\pagenumbering{roman}			% roman page numbing (invisible for empty page style)
-\pagestyle{empty}				% no header or footers
-%\input{content/titlepages}		% INCLUDE: all titlepages
-%\cleardoublepage
-
-\pagestyle{plain}				% display just page numbers
-%\input{content/abstract}		% INCLUDE: the abstracts (english and german)
-%\cleardoublepage
-%
-%\input{content/acknowledgement} % INCLUDE: acknowledgement
-%\cleardoublepage
-%
-\setcounter{tocdepth}{2}		% define depth of toc
-%\tableofcontents				% display table of contents
-%\cleardoublepage
+%TC:ignore
+\pagenumbering{arabic}			% arabic page numbering
+\include{Chapters/Frontmatter}		% INCLUDE: all titlepages
 
 % --------------------------
 % Body matter
 % --------------------------
-\pagenumbering{arabic}			% arabic page numbering
-\setcounter{page}{1}			% set page counter
+%TC:endignore
 \pagestyle{maincontentstyle} 	% fancy header and footer
 
-%\input{content/chapter-introduction} % INCLUDE: introduction
-%\input{content/chapter-related-work} % INCLUDE: related work
-%\input{content/chapter-system}	% INCLUDE: system
-%\input{content/chapter-concepts} % INCLUDE: concepts
-%\input{content/chapter-conclusion} % INCLUDE: conclusion
+\setlength{\parindent}{15pt}
+\setstretch{1.5}
+\setlength{\skip\footins}{2cm}
 
-\onehalfspacing
-
-\setcounter{chapter}{3}
-\input{Chapters/Chapter04}
-\cleardoublepage
+\include{Chapters/Chapter01}
+\include{Chapters/Chapter02}
+\include{Chapters/Chapter03}
+\include{Chapters/Chapter04}
+\include{Chapters/Chapter05}
+\cleardoublepage{}
 
 % --------------------------
 % Back matter
 % --------------------------
+%TC:ignore
 {%
 \setstretch{1.1}
-\DeclareFieldFormat
-  [article,inbook,incollection,inproceedings,patent,thesis,unpublished]
-  {title}{#1\isdot}
-\renewbibmacro{in:}{}
-\renewcommand{\bibfont}{\normalfont\small}
-\setlength{\biblabelsep}{0pt}
-\setlength{\bibitemsep}{0.5\baselineskip plus 0.5\baselineskip}
-\printbibliography
+\printbibliography{}
 }
 % \cleardoublepage
-
-%\listoffigures
-%\cleardoublepage
-
-%\listoftables
-%\cleardoublepage
 
 %\cleardoublepage
 %
@@ -176,6 +177,7 @@
 \clearpage
 \newpage
 \mbox{}
+%TC:endignore
 
 % **************************************************
 % End of Document CONTENT

@@ -1,0 +1,582 @@
+% !TEX root = ../thesis.tex
+%
+\chapter{Protecting tanoak in mixed species forest stands\label{ch:protect_tanoak}}
+
+\section{Introduction\label{sec:ch5:Intro}}
+
+Throughout this work we have developed methods for evaluating and optimising disease management. In this chapter we will begin to apply these methods to the control of the \textit{Phytophthora ramorum} outbreak in the United States. We introduced \textit{P.~ramorum} and the current status of sudden oak death (SOD) spread in Chapter~\ref{ch:intro}, and in this chapter we will focus on strategies for management of SOD within mixed species forest stands. Whilst widespread eradication of SOD in California is now impossible \citep{cunniffe_modelling_2016}, localised control to slow disease spread, within a stand for example, can still be effective. This is particularly true when management objectives are focussed on protection of high value resources with cultural, ecological and economic importance: the type of optimisation problem considered in Chapter~\ref{ch:three_patch}. In these cases control does not require global eradication, allowing management effort to be highly targeted.
+
+In this chapter we will look at what management goals are appropriate for SOD spread in mixed species stands, in particular for protecting a culturally important species: tanoak. Using our optimal control frameworks we will explore what control methods are most effective, and how deployment should vary over time. Most importantly, we will look at the effects of parameter and observational uncertainty on control efficacy, testing under what conditions MPC outperforms open-loop\footnote{All code for this chapter is available at \url{https://github.com/ehbussell/MixedStand} (\todo{Currently private})}.
+
+\subsection{The tanoak tree}
+
+The tanoak, \textit{Notholithocarpus densiflorus} syn.~\textit{Lithocarpus densiflorus}, is a medium sized Californian tree related to the American chestnut. Tanoak is present along the western coast of California from near Santa Barbara up into southwestern Oregon \citep[see Figure~\ref{fig:ch5:tanoak_range};][]{tappeiner_lithocarpus_1990}. Tanoak grows in humid conditions with seasonal precipitation. It grows from sea level to elevations of \SI{1500}{\meter} and can thrive on soils less suitable for conifers. Its higher moisture requirements though mean it is found more often on north slopes than south slopes \citep{tappeiner_lithocarpus_1990}. Mature trees are heavy producers of acorns, which are highly valued by indigenous tribal people \citep{bowcutt_tanoak_2013}. The acorns are an important source of food for Native Americans as much now as historically, with only salmon eaten in greater quantities. The thick shell and high tannin content means the acorns can be stored for years, and hence for thousands of years they have been used as the basis for trade between tribes. The tree is used by Native Americans for much more than just nutrition though, with fishing nets, baskets and medicines made using tanoak bark and wood \citep{bowcutt_tanoak_2013}.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Tanoak_Range}
+        \caption[The tanoak tree: pictures and map of spatial range]{\textbf{(a)} Map showing the spatial range of tanoak in California and Oregon. Tanoak is found in the red areas. Data from \url{www.plantmaps.com}. \textbf{(b)} Photograph of tanoak decline due to sudden oak death in Humboldt county, California from 2006. Source: \url{www.suddenoakdeath.org}. \textbf{(c)} Photograph of tanoak acorns, an important source of food for Native Americans. Source: \url{en.wikipedia.org/wiki/Notholithocarpus}. \label{fig:ch5:tanoak_range}}
+    \end{center}
+\end{figure}
+
+Tanoak is found alongside coast redwood (\textit{Sequoia sempervirens}) across coastal Californian forests, and is believed to be highly important to these ecosystems \citep{noss_redwood_2000}. As well as their cultural importance, tanoaks provide habitat and a vital winter food source for animals in these forests \citep{long_recent_2018}, particularly given the more unpredictable and less nutritious crops from redwood trees. Damaged, and even sometimes healthy, tanoak trees resprout prolifically \citep{tappeiner_lithocarpus_1990}. This and the abundance of seed produced could explain why tanoak is so ubiquitous alongside redwood, as it competitively excludes other species that could live in redwood forests \citep{ramage_forest_2011}. It is also this resprouting that ensures the population regenerates after the forest fires \citep{mcdonald_california_2002} that are common in this region \citep{ramage_role_2010}.
+
+\subsection{Effects of sudden oak death}
+
+The spread of \textit{P.~ramorum} is a significant threat to tanoak, causing drastic declines in populations that could lead to the extinction of this important species \citep{mcpherson_responses_2010}. Tanoak trees of all ages are highly susceptible to SOD and have a very high mortality from the disease \citep{davis_preimpact_2010}. Most other species susceptible to SOD, for example coast live oak, require a secondary foliar host for infection to spread to the trunk \citep{rizzo_phytophthora_2005}. As tanoak is the only species for which stems, twigs and foliage can all be infected, bole infection does not require this secondary host and can therefore occur more rapidly \citep{rizzo_sudden_2003}. Tanoak infected with \textit{P.~ramorum} has a mortality rate of \SI{6}{\percent} per year, with infection leading to eventual tree death in at least \SI{50}{\percent} of cases \citep{mcpherson_responses_2010}. Some report mortality is likely to approach \SI{100}{\percent} \citep{ramage_sudden_2010}. Field studies have also found that mortality increases with tree size, meaning the larger trees that produce more acorns are disproportionately affected \citep{cobb_ecosystem_2012}.
+
+\citet{maloney_establishment_2005} look at the establishment of SOD in coastal redwood forests dominated by redwood, tanoak and California bay laurel (\textit{Umbellularia californica}). Whilst redwood trees are not affected by SOD, they find that the presence of bay laurel is a key factor in the decline of tanoak due to SOD\@. \textit{P.~ramorum} can sporulate prolifically on bay trees, but the host is not killed by the disease \citep{davidson_sources_2008}. \citet{maloney_establishment_2005} state that the differing host mortalities due to SOD could lead to dramatic shifts in forest composition. These compositional changes can have far-reaching consequences and knock-on effects. For example, tree deaths due to SOD increase levels of dry wood in forests, and so greater fuel loads leading to greater risk of forest fire \citep{forrestel_disease_2015}. SOD affected forests have fewer large trees than healthy forests, which reduces the amount of CO\textsubscript{2} captured by the forest. Management of SOD to retain larger tanoak can help manage carbon emissions \citep{twieg_reducing_2017}, and these wider reaching implications make effective disease interventions even more important.
+
+\subsection{Predicting disease progression}
+
+Mathematical models can be used to predict the future spread of disease, and hence inform control strategies. Much of SOD modelling, at least to start with, has focussed on building risk maps. These maps show which areas are most likely to become infected, so that control resources can be allocated appropriately. \citet{meentemeyer_mapping_2004} used an expert informed, rule-based model to find high risk areas in California. This was based on weighted combinations of host distribution, temperature and moisture data to find high risk locations. Later work by \citet{kelly_modeling_2007} compared environmental niche models like this one, with other model structures including logistic regression and support vector machines, and similar models have been used in Oregon \citep{vaclavik_mapping_2010}. All these risk models capture predictions of future spread, but not the dynamics of those invasions into new regions. These models cannot therefore be used to investigate the dynamics of tanoak decline, and importantly what effect control would have on disease progression.
+
+Further development of these ecological niche models incorporated dispersal estimation into the risk mapping \citep{meentemeyer_early_2008}. This in effect increases the risk of invasion in areas close to known infestations. Whilst this still did not capture the dynamics of the system, this shows a move towards capturing these dynamic effects. Models were also being developed to model the spread of \emph{P.~ramorum} in the UK\@. Measurements made of the network properties of susceptible host movement in the UK nursery trade highlighted that critical nodes can be important for controlling the spread of SOD \citep{pautasso_epidemiological_2008, jeger_modelling_2007}. \citet{harwood_epidemiological_2009} developed a stochastic network model to capture the full dynamics of pathogen spread. The simulations however, did not directly model different host species, so could not be used to model the differing effects on multiple species.
+
+Larger scale models of SOD spread seek to capture invasion dynamics at the landscape scale. \citet{meentemeyer_epidemiological_2011} developed a model of SOD invasion to predict spread across California through to 2030. This model was later used to assess different control strategies \citep{cunniffe_modelling_2016}. Another similar model \citep{tonini_modeling_2018} was developed using the LANDIS-II forest simulation model \citep{scheller_design_2007}, designed to simulate forest disturbances. Both of these landscape scale models group hosts together. In \citet{meentemeyer_early_2008} each simulation grid cell has a `host index' that captures the susceptibility of the host composition in that cell. In LANDIS-II the disease model can only remove all hosts in a cohort of a given age in each cell. This means that small scale changes to host structure cannot be captured easily.
+
+Models of disease at the small scale of a forest stand are very limited in number. \citet{brown_forest_2009} use `stand reconstruction' to predict mortality within a forest stand. By looking for dead trees and symptomatic hosts in study plots, they predict mortality rates and use these to predict future changes to stand structure. Again, dynamics are not captured here. \citet{cobb_ecosystem_2012} developed a differential equation model of SOD spread within a forest stand, capturing both invasion dynamics and differing mortality and infection rates by species and tanoak age class. Since this is the only dynamic model at the stand level which explicitly models differences between hosts species, we will investigate how this model can be used to optimise local control strategies.
+
+\subsection{Key questions}
+
+We will seek to answer the following key questions:
+\begin{enumerate}
+    \item How can the model from \citet{cobb_ecosystem_2012} be adapted to allow optimisation of time-dependent disease management strategies?
+    \item How should time-dependent controls be deployed under resource constraints to best preserve the valuable tanoak population in coastal redwood forests?
+    \item How do these strategies compare with current recommended practice?
+    \item How robust and reliable are these control results? In particular, how do these strategies perform when information about the epidemiological parameters and the pathogen distribution is incomplete?
+\end{enumerate}
+
+\newpage
+\phantomsection\label{sec:ch5:CobbModel}
+\section{Mixed species forest dynamics}
+
+The epidemiological model in \citet{cobb_ecosystem_2012} was designed to investigate the medium and long term effects of sudden oak death on the host composition of mixed species \SI{20}{\hectare} forest stands. As we will use this model structure extensively, we will refer to this model as the Cobb model from now on. The trees present in the forest stands considered are tanoak, bay laurel and redwood, which is not a host for \textit{P.~ramorum}. The authors were primarily interested in the decline of overstorey tanoak, here defined as trees over \SI{10}{\cm} d.b.h., and the conditions which lead to its eventual extinction. The model is parameterised using data from longitudinal field studies conducted over 5 years and across 110 \textit{P.~ramorum} invaded plots and 95 uninvaded plots, all of area \SI{500}{\metre\squared}. The epidemiological model is then used to assess how the forest structure in similar plots will change over the next 100 years, under scenarios with varying host proportions. The model is used to find a threshold initial level of tanoak in the forest, above which disease progression leads to elimination of large tanoaks. This is found to be around \SI{8}{\percent}, under a specific initial age structure. We will now describe the formulation of the model, as described in \citet{cobb_ecosystem_2012}, in more detail.
+
+\subsection{Model description}
+
+The model tracks the dynamics in stem density of three different host groups: redwood, bay laurel and tanoak. The redwood group is used to represent all species that are not susceptible to \textit{P.~ramorum} infection, which for the stands considered is predominantly coast redwood. Bay laurel is a spreader species that can be infected and is highly infectious, but does not itself suffer any significant effects from the disease. Tanoak however, is highly susceptible to \textit{P.~ramorum} infection and disease induced mortality is high, particularly in older and larger hosts. This age dependence, and the importance of overstorey tanoak, drove the authors to divide the tanoak class into separate age groups, in order to capture the effects of disease on the older trees. Four different age groups were created with the two oldest groups corresponding to the overstorey tanoak. This was deemed to capture the changes in susceptibility with age in enough detail, whilst also keeping the model as simple as possible. As differing effects on older trees are less important for the other hosts, and to reduce model complexity, the other host groups are not divided into age classes. The model tracks natural host demography, with natural mortality and seed recruitment rates for each host class. Recruitment depends on the amount of empty space available in the forest for seedling establishment, with each tanoak age class weighted to occupy differing amounts of space per stem. Over time tanoak hosts progress through the age classes. See Figure~\ref{fig:ch5:model_description}(a) for an overview of the different classes and possible transitions.
+
+\begin{figure}
+\centering
+    \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Model}
+    \caption[Mixed stand model structure]{Diagram describing Cobb model host structure. \textbf{(a)} shows the possible host states and transitions. Only bay and tanoak are epidemiologically active, with the tanoak age classes grouped into small (tanoak 1 and 2) and large (tanoak 3 and 4) categories. \textbf{(b)} shows the spore deposition kernel described in \citet{cobb_ecosystem_2012}, with \SI{50}{\percent} of spores landing within the same cell and the other \SI{50}{\percent} spread over the neighbouring 4 cells.\label{fig:ch5:model_description}}
+\end{figure}
+
+The model is spatial with hosts positioned on a grid in square cells each of area \SI{500}{\meter\squared}. Recruitment and age transitions occur within a single cell, with density-dependent recruitment using the available space calculated for that cell. This corresponds to an assumption the seed dispersal between cells is negligible. This is a reasonable assumption since the heavy acorns predominantly fall under the crown of the tree \citep{tappeiner_lithocarpus_1990}. In all this means that infection dynamics are the only interaction between cells. Infected hosts exert infectious pressure on susceptible hosts within the same cell and in the 4 adjacent cells. Infectious spores are distributed such that \SI{50}{\percent} land within the same cell, and the other \SI{50}{\percent} are distributed across the adjacent cells (Figure~\ref{fig:ch5:model_description}(b)). Bay and all age classes of tanoak are susceptible, and are infectious once infected.
+
+The model is formulated as a system of ODEs resulting in 11 differential equations per cell. We use $S$ to indicate healthy hosts, $I$ to indicate infected hosts, and subscripts to indicate species (1: tanoak, 2: bay, 3: redwood), age class (1--4 where applicable), and cell location ($x$), following the notation used in \citet{cobb_ecosystem_2012} and as shown in Figure~\ref{fig:ch5:model_description}\textbf{(a)}. The resulting equations for cell $x$ and age class $i$ are:
+\begin{subequations}\label{eqn:ch5:cobb_model}
+\begin{align}
+    \begin{split}
+        \dot{S}_{1,i,x} &= \delta_{1,i}\left[B_{1,x}E_x+r\alpha_{1,i}I_{1,i,x}\right] - d_{1,i}S_{1,i,x} - \Lambda_{1,i,x}S_{1,i,x} \\
+        &{}\quad\quad+ \mu_1I_{1,i,x} + a_{i-1}S_{1,i-1,x} - a_iS_{1,i,x} \label{eqn:ch5:cobb_model_1}
+    \end{split}\\
+    \dot{I}_{1,i,x} &= -\alpha_{1,i}I_{1,i,x} - d_{1,i}I_{1,i,x} + \Lambda_{1,i,x}S_{1,i,x} - \mu_1I_{1,i,x} + a_{i-1}I_{1,i-1,x} - a_iI_{1,i,x} \label{eqn:ch5:cobb_model_2} \\\notag\\
+    \dot{S}_{2,x} &= b_2\left(S_{2,x}+I_{2,x}\right)E_x - d_2S_{2,x} - \Lambda_{2,x}S_{2,x} + \mu_2I_{2,x} \label{eqn:ch5:cobb_model_3} \\
+    \dot{I}_{2,x} &= - d_2I_{2,x} + \Lambda_{2,x}S_{2,x} - \mu_2I_{2,x}\label{eqn:ch5:cobb_model_4} \\\notag\\
+    \dot{S}_{3,x} &= b_3S_{3,x}E_x - d_3S_{3,x} \label{eqn:ch5:cobb_model_5}
+\end{align}
+\end{subequations}
+where tanoak dynamics are given by equations~\ref{eqn:ch5:cobb_model_1} and \ref{eqn:ch5:cobb_model_2}, bay dynamics by \ref{eqn:ch5:cobb_model_3} and \ref{eqn:ch5:cobb_model_4}, and redwood dynamics by \ref{eqn:ch5:cobb_model_5}. All parameter meanings and symbols are given in Table~\ref{tab:ch5:parameters}. The delta function in equation~\ref{eqn:ch5:cobb_model_1}, $\delta_{1,i}$, is equal to one for the smallest age class, and zero otherwise. This ensures that recruitment is always to the smallest age class.
+
+\begin{table}
+    \small
+    \centering
+    \caption{Parameter values used in \citet{cobb_ecosystem_2012}. Parameter values marked with an asterisk are set in model initialisation to impose dynamic equilibrium. See Section~\ref{sec:ch5:model_analysis} for a full description.\label{tab:ch5:parameters}}
+    \begin{tabular}{@{}>{\raggedright}p{3cm}lll@{}}
+        \toprule
+        \textbf{Parameter} && \textbf{Symbol} & \textbf{Default Value} \\
+        \midrule
+        \multirow[t]{7}{3cm}{Infection rate} & tanoak to tanoak (\SIrange{1}{2}{\cm} d.b.h.)& $\beta_{1,1}$ & \SI{0.33}{\per\year}\\
+        & tanoak to tanoak (\SIrange{2}{10}{\cm} d.b.h.)& $\beta_{1,2}$ & \SI{0.32}{\per\year}\\
+        & tanoak to tanoak (\SIrange{10}{30}{\cm} d.b.h.)& $\beta_{1,3}$ & \SI{0.30}{\per\year}\\
+        & tanoak to tanoak (>\SI{30}{\cm} d.b.h.)& $\beta_{1,4}$ & \SI{0.24}{\per\year}\\
+        & bay to tanoak & $\beta_{12}$ & \SI{1.46}{\per\year}\\
+        & bay to bay & $\beta_{2}$ & \SI{1.33}{\per\year}\\
+        & tanoak to bay & $\beta_{21}$ & \SI{0.30}{\per\year}\\
+        \midrule
+        \multirow[t]{6}{3cm}{Natural mortality rate} & tanoak (\SIrange{1}{2}{\cm} d.b.h.) & $d_{1,1}$ & \SI{0.006}{\per\year}\\
+        & tanoak (\SIrange{2}{10}{\cm} d.b.h.) & $d_{1,2}$ & \SI{0.003}{\per\year}\\
+        & tanoak (\SIrange{10}{30}{\cm} d.b.h.) & $d_{1,3}$ & \SI{0.001}{\per\year}\\
+        & tanoak (>\SI{30}{\cm} d.b.h.) & $d_{1,4}$ & \SI{0.032}{\per\year}\\
+        & bay & $d_{2}$ & \SI{0.02}{\per\year}\\
+        & redwood & $d_{3}$ & \SI{0.02}{\per\year}\\
+        \midrule
+        \multirow[t]{6}{3cm}{Recruitment rate} & tanoak (\SIrange{1}{2}{\cm} d.b.h.) & $b_{1,1}$ & \SI{0.0}{\per\year}\\
+        & tanoak (\SIrange{2}{10}{\cm} d.b.h.) & $b_{1,2}$ & \SI{0.007}{\per\year}\\
+        & tanoak (\SIrange{10}{30}{\cm} d.b.h.) & $b_{1,3}$ & \SI{0.02}{\per\year}\\
+        & tanoak (>\SI{30}{\cm} d.b.h.) & $b_{1,4}$ & \SI{0.073}{\per\year}\\
+        & bay & $b_{2}$ & *\\
+        & redwood & $b_{3}$ & *\\
+        \midrule
+        \multirow[t]{4}{3cm}{Disease induced mortality rate} & tanoak (\SIrange{1}{2}{\cm} d.b.h.) & $\alpha_{1,1}$ & \SI{0.019}{\per\year}\\
+        & tanoak (\SIrange{2}{10}{\cm} d.b.h.) & $\alpha_{1,2}$ & \SI{0.022}{\per\year}\\
+        & tanoak (\SIrange{10}{30}{\cm} d.b.h.) & $\alpha_{1,3}$ & \SI{0.035}{\per\year}\\
+        & tanoak (>\SI{30}{\cm} d.b.h.) & $\alpha_{1,4}$ & \SI{0.14}{\per\year}\\
+        \midrule
+        \multirow[t]{3}{3cm}{Tanoak age transition rate} & (\SIrange{1}{2}{\cm} d.b.h.) to (\SIrange{2}{10}{\cm} d.b.h.) & $a_{1,1}$ & \SI{0.142}{\per\year}\\
+        & (\SIrange{2}{10}{\cm} d.b.h.) to (\SIrange{10}{30}{\cm} d.b.h.) & $a_{1,2}$ & \SI{0.2}{\per\year}\\
+        & (\SIrange{10}{30}{\cm} d.b.h.) to (>\SI{30}{\cm} d.b.h.) & $a_{1,3}$ & \SI{0.05}{\per\year}\\
+        \midrule
+        \multirow[t]{2}{3cm}{Recovery rate} & tanoak & $\mu_1$ & \SI{0.01}{\per\year}\\
+        & bay & $\mu_2$ & \SI{0.1}{\per\year}\\
+        \midrule
+        Space weight & species $i$ & $W_i$ & \num{1}\\
+        & tanoak age class $i$ & $w_{1,i}$ & *\\
+        \midrule
+        Resprouting probability & tanoak & $r$ & \num{0.5}\\
+        \midrule
+        \multirow[t]{2}{3cm}{Spore proportion} & within cell & $f_0$ & \num{0.5}\\
+        & between cell & $f_1$ & \num{0.125}\\
+        \bottomrule
+    \end{tabular}
+    \end{table}
+
+The recruitment rates are density dependent as they depend on the space available for recruitment in each cell, $E_x$. The empty space in cell $x$ is given by:
+\begin{equation}
+    E_x = 1 - W_1\sum_{i=1}^4w_{1,i}\left(S_{1,i,x} + I_{1,i,x}\right) - W_2\left(S_{2,x} + I_{2,x}\right) - W_3S_{3,x} \;.
+\end{equation}
+The species weights $W_j$ give the relative space used by each species, which are assumed to all be equal to 1. The tanoak age class weights $w_{1,i}$ give different relative space usage for each age class. These space weights capture actual occupied space as well as seedling suppression, for example by blocking sunlight. The tanoak recruitment rate is made up of each individual recruitment from each age class, but all seedlings enter at the smallest age class. The tanoak recruitment rate, $B_{1,x}$, in equation~\ref{eqn:ch5:cobb_model_1} is given by:
+\begin{equation}
+    B_{1,x} = \sum_{i=1}^4b_{1,i}\left(S_{1,i,x} + I_{1,i,x}\right)
+\end{equation}
+so that recruitment is from all age classes, with seed production rates that are independent of infection status.
+
+Finally we describe the force of infection terms $\Lambda$ in equations~\ref{eqn:ch5:cobb_model}:
+\begin{subequations}\label{eqn:ch5:infection}
+    \begin{alignat}{5}
+        % TODO equations....
+        \Lambda_{1,i,x} &= f_0\left[\beta_{1,i}\sum_{j=1}^4I_{1,j,x} + \beta_{12}I_{2,x}\right] &+& f_1\sum_{y\in N(x)}\left[\beta_{1,i}\sum_{j=1}^4I_{1,j,y} + \beta_{12}I_{2,y}\right] \label{eqn:ch5:infection_1}\\
+        \Lambda_{2,x} &= f_0\left[\beta_{21}\sum_{j=1}^4I_{1,j,x} + \beta_{2}I_{2,x}\right] &+& f_1\sum_{y\in N(x)}\left[\beta_{21}\sum_{j=1}^4I_{1,j,y} + \beta_{2}I_{2,y}\right] \label{eqn:ch5:infection_2}
+    \end{alignat}
+\end{subequations}
+where $\beta_{12}$ is the rate of infection from bay to tanoak, $\beta_{21}$ from tanoak to bay, and $\beta_{2}$ within bay. The infection rate within tanoak is given by $\beta_{1,i}$, meaning each age class has a different susceptibility to infection from other tanoaks. Overall however, tanoak age classes do not vary in susceptibility to infection from bay, nor in the rate of infecting bay. Hence, $\beta_{12}$ and $\beta_{21}$ do not depend on age class. The parameters $f_0$ and $f_1$ give the proportion of spores deposited within and between cells respectively, where the sum over cells $N(x)$ is over the four cells adjacent to $x$.
+
+\subsubsection{Conclusions using the model}
+
+\citet{cobb_ecosystem_2012} used this model to predict forest structure changes over the next 100 years. They found that in forests with the spreader species bay present, overstorey tanoak (defined as the two largest age classes in the model) declines to near extinction (Figure~\ref{fig:ch5:cobb_host_change}(a)). Further to this, the authors showed that in forests with no bay present, only when tanoak makes up less than \SI{8}{\percent} of the initial stand composition does the pathogen not become established (Figure~\ref{fig:ch5:cobb_host_change}(b) and (c)). The Cobb study does not consider control strategies for managing tanoak decline, but later studies do consider this using an updated version of the model \citep{ross_soddr_2013}. This R package, called SODDr, simulates the same dynamics, but using a discrete version of the model. The model was made discrete nominally to allow simpler inclusion of stochasticity and to improve model fitting. The SODDr model has been used in conjunction with field studies to investigate the effectiveness of understorey vegetation thinning before and after an SOD disease outbreak \citep{cobb_resiliency_2017}. Another study used SODDr to forecast the effect of bay removal and tanoak thinning on forest conditions \citep{valachovic_forest_2017}, and more recent work has looked at the impact of putative host resistance and tolerance using SODDr \citep{cobb_promise_2019}. Whilst these controls are all either one-off interventions, or natural resistance, the model is being used to ask questions about optimal disease management.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Cobb_original}
+        \caption[Mixed stand model baseline dynamics]{Dynamics of Cobb model, parameterised as in \citet{cobb_ecosystem_2012}. The three plots correspond to the three subplots in Figure~4 in \citet{cobb_ecosystem_2012}. \textbf{(a)} shows dynamics for a stand with bay, tanoak and redwood present, where large tanoaks decline to near extinction over 100 years. \textbf{(b)} shows the dynamics with no bay present and tanoak making up \SI{80}{\percent} of the initial composition. Here large tanoak declines but does not near extinction. In \textbf{(c)} however, with \SI{8}{\percent} tanoak, there is no decline in the large tanoak population.\label{fig:ch5:cobb_host_change}}
+    \end{center}
+\end{figure}
+
+\subsection{Model analysis\label{sec:ch5:model_analysis}}
+
+We aim to use the Cobb model to drive the open-loop and MPC optimisation frameworks developed in the previous chapter. This will help identify long term, time-dependent control strategies that conserve tanoak populations in mixed species stands. More importantly, we use the Cobb model to test how reliable and robust the frameworks are to a realistic disease scenario, testing handling of uncertainties in both parameters and observations. To ensure that our results are reliable we first analyse the Cobb model in more detail, to validate our own implementation and confirm results realistically capture the real-world spatial spread of SOD\@. To do this we tested our own Python implementation of the Cobb model versus SODDr as well as the original Berkeley Madonna (BM) code used to generate the figures in \citet{cobb_ecosystem_2012}. In doing this we found some unphysical features of the Cobb model which require correction to ensure model results are realistic, most importantly spore deposition patterns and implausible seedling parameters.
+
+\subsubsection{Spore deposition}
+
+We first analyse an error in the spore deposition pattern, resulting in spores deposited equally over the source cell and adjacent cells. This affects parameters $f_0$ and $f_1$ in Table~\ref{tab:ch5:parameters}, and means more spores are deposited than produced.
+
+The paper explains the \SI{50}{\percent} of spores fall within the same cell, and the other \SI{50}{\percent} are distributed over the four nearest neighbour cells. However, in both the BM code and the SODDr code the infectious pressure between cells is not distributed correctly. In the BM code the source cell and each of the four nearest neighbours receive \SI{100}{\percent} of the source cell's spores. In Equation~\ref{eqn:ch5:infection} this corresponds to both $f_0$ and $f_1$ equal to \num{1.0}, and hence a clearly unrealistic \SI{500}{\percent} of spores are deposited. In other words, an infection source cell provides the same force of infection to itself, and to each of its adjacent cells. The dispersal kernel in this case must increase with distance, since the overall force of infection to adjacent cells is greater than to the source cell. This would be a very unusual kernel for a splash-dispersed pathogen. The effect of this error is therefore to increase the spread rate, and change the shape of the dispersal kernel.
+
+The spore deposition error is partially fixed in the SODDr implementation where $f_0$ equals 0.5 and $f_1$ equals \num{0.125} however, the between cell spores are deposited over the 8 nearest neighbours rather than 4. This leads to \SI{150}{\percent} of spores deposited, again physically impossible. The corrected should use $f_0=$\num{0.5} and $f_1=$\num{0.125}, over 4 nearest neighbours. The effect of this is to significantly slow the rate of forest composition changes when compared with the results from the paper (Figure~\ref{fig:ch5:cobb_spatial_rate}).
+
+In our implementation the realism of the spore deposition is improved further, by introducing an exponential dispersal kernel. As used in \citet{cobb_ecosystem_2012}, \SI{50}{\percent} of spores are deposited within the source cell ($f_0=\num{0.5}$). The other \SI{50}{\percent} are distributed according to an exponential kernel with a scale parameter of \SI{10}{\meter}. The kernel is normalised so that total spore deposition across all cells is \SI{100}{\percent}. The spore proportion between cells becomes proportional to:
+\begin{equation}\label{eqn:ch5:spore_kernel}
+    \exp{-d_{ij}/\sigma}
+\end{equation}
+where $d_{ij}$ is the distance from source cell to target cell, and $\sigma$ is the scale parameter. The choice of \SI{10}{\meter} as a scale parameter is consistent with distances of splash dispersal found for \emph{P.~ramorum} \citep{davidson_transmission_2005}
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Cobb_corrected}
+        \caption[Change in model dynamics under corrected parameters]{Change in dynamics when dispersal in the model is correctly parameterised, with realistic spore deposition. \textbf{(a)} shows the original dynamics using the implementation from \citet{cobb_ecosystem_2012}. In \textbf{(b)} the dispersal kernel is corrected, using an exponential kernel to distribute spores across cells. This leads to significantly slower dynamics unless other parameters are rescaled.\label{fig:ch5:cobb_spatial_rate}}
+    \end{center}
+\end{figure}
+
+\subsubsection{Model initialisation}
+
+A further problem with the Cobb model is the parameterisation and initialisation of the system, which leads to unrealistically high recruitment rates and space weights for the smallest tanoak age class. This affects parameters $b_{1,1}$ and $w_{1,1}$ in Table~\ref{tab:ch5:parameters}.
+
+The age specific tanoak space weights, $w_{1,i}$, are fixed such that one quarter of the space occupied by tanoak is allocated to each age class. With the initial age distribution used in the BM code this corresponds to the youngest age class, the seedlings, occupying the most space per stem. This is clearly unrealistic. We choose to make the more realistic assumption that space occupied scales directly with basal area. Whilst this is relatively simplistic, it does at least ensure that smaller stems occupy less space. In the paper the initial age distribution, empty space and recruitment rates are set by running the model over 1000 years and finding parameters that give approximate dynamic equilibrium. In the BM code this leads to the highest recruitment rate in the smallest age class. In other words, the tanoak seedlings produce the most seeds. This is despite the paper claiming that recruitment rates are found under the condition that seed production increases with age.
+
+To fix the initialisation, we solve for the dynamic equilibrium analytically. By setting infection rates to zero, we find the initial empty space and age distribution that gives dynamic equilibrium. We use the recruitment rates from \citet{cobb_ecosystem_2012}, but set the recruitment rate of the smallest age class to zero. More specifically, in the disease-free case Equations~\ref{eqn:ch5:cobb_model_1} for tanoak in a single cell become:
+\begin{subequations}
+\begin{align}
+    \dot{S}_{1,1} &= \left(\sum_{i=1}^4b_{1,i}S_{1,i}\right)E - d_{1,1}S_{1,1} - a_1S_{1,1}\\
+    \dot{S}_{1,2} &= a_1S_{1,1} - d_{1,2}S_{1,2} - a_2S_{1,2}\\
+    \dot{S}_{1,3} &= a_2S_{1,2} - d_{1,3}S_{1,3} - a_3S_{1,3}\\
+    \dot{S}_{1,4} &= a_3S_{1,3} - d_{1,4}S_{1,4} \;.
+\end{align}
+\end{subequations}
+By setting the left hand side of these equations to zero we impose dynamic equilibrium within tanoak. With the condition that $b_{1,1}$ is zero, these are solved to find the empty space and $S_{1,2}$, $S_{1,3}$, and $S_{1,3}$ in terms of $S_{1,1}$:
+\begin{subequations}\label{eqn:ch5:tan_init}
+    \begin{align}
+        E &= \frac{d_{1,1} + a_1}{b_{1,2}A_2 + b_{1,3}A_3 + b_{1,4}A_4}\\
+        S_{1,2} &= A_2S_{1,1}\\
+        S_{1,3} &= A_3S_{1,1}\\
+        S_{1,4} &= A_4S_{1,1}
+    \end{align}
+    \end{subequations}
+where
+\begin{subequations}
+\begin{align}
+    A_2 &= \frac{a_1}{a_2+d_{1,2}}\\
+    A_3 &= \frac{a_2A_2}{a_3+d_{1,3}}\\
+    A_4 &= \frac{a_3A_3}{d_{1,4}}
+\end{align}
+\end{subequations}
+To find $S_{1,1}$ we fix the initial proportions of each host type, with $p_1$, $p_2$ and $p_3$ representing the proportion of hosts that are tanoak, bay or redwood respectively. This gives that:
+\begin{equation}
+    \label{eqn:ch5:tan_0_init}
+    S_{1,1} = \frac{p_1(1-E)}{1+A_2+A_3+A_4}\;.
+\end{equation}
+Finally, we fix the recruitment rates of bay and redwood such that those hosts are also in dynamic equilibrium. Namely:
+\begin{subequations}
+\begin{align}
+    b_2 &= d_2 / E \\
+    b_3 &= d_3 / E \;.
+\end{align}
+\end{subequations}
+
+\subsubsection{Reparameterisation}
+
+What effects do these errors have on the model dynamics and conclusions from the 2012 paper? The dominant effect is the change in rate of spatial spread due to the error in spore deposition. This significantly affects the time scale of SOD invasion, slowing it beyond what is considered reasonable for SOD within stands (figure~\ref{fig:ch5:cobb_spatial_rate}). Whilst there is a lack of data covering spatial invasion rates at the scale of an individual forest stand, the time scales in \citet{cobb_ecosystem_2012} are broadly consistent with expectations. \citet{mcpherson_responses_2010} found infection rates within stand of around \SI{10}{\percent} per year in tanoak. Plots were \SI{90}{\percent} infected after approximately 10 years however, the plots have an average size of \SI{1234}{\meter\squared} whereas the stand we are modelling is \SI{200000}{\meter\squared}. In the original Cobb model the \SI{500}{\meter\squared} cells adjacent to the source cell reach \SI{90}{\percent} infection after approximately 8 years, consistent with the findings in \citet{mcpherson_responses_2010}. \textit{P.~ramorum} is known to spread locally via rain splash at distances of up to \SI{20}{\meter} \citep{davidson_transmission_2005}, but can be carried much further in rare long distance dispersal events \citep{meentemeyer_epidemiological_2011}. For within stand spread we will consider only the short scale spread which corresponds to the invasion reaching the edge of the modelled \SI{20}{\hectare} plot after ten to twenty years. This is again consistent with the time scale found in the original Cobb model, where infection reaches \SI{5}{\percent} at the stand edge after 15 years.
+
+With this confidence in the broad timescales in \citet{cobb_ecosystem_2012}, we scale the infection rates in our reparameterised model with fixed dispersal and recruitment to match the original time scale of invasion found in \citet{cobb_ecosystem_2012}. We use the time at which the population of small tanoak increases above the large tanoak population to define the rate of invasion. All infection rates in the corrected model are then scaled by the same factor so that relative rates are kept the same, but the rate of invasion matches that of the original Cobb model implementation (figure~\ref{fig:ch5:inf_scaling}). This ensures that the dynamics are correct, with a realistic kernel distribution, whilst matching the generally accepted spread rates for SOD\@. Our choice for defining the time scale is arbitrary, but since the results show that the best fit is very close to the original at all times, other choices would not give very different results. We also test parameter sensitivity in the next section.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Cobb_scaled}
+        \caption[Effect of model reparameterisation and infection rate scaling]{Effects of correcting parameterisation and spore deposition kernel, and matching time scales. \textbf{(a)} shows the original dynamics in \citet{cobb_ecosystem_2012}, with the cross over time labelled. The cross over time is the time until the large tanoak population falls below the small tanoak population, and measures the time scale of the epidemic. In \textbf{(b)} we show the corrected and scaled dynamics, with the epidemic time scale matched to that in \textbf{(a)}. This is matched by scaling the infection rates, with the effect of this scaling factor on the cross over time shown in \textbf{(c)}.\label{fig:ch5:inf_scaling}}
+    \end{center}
+\end{figure}
+
+A summary of all the parameter changes made based on the corrections described here is given in Table~\ref{tab:ch5:param_changes}.
+
+\begin{table}[h]
+    \centering
+    \caption[Summary of corrections to Cobb model]{Summary of changes made to Cobb model to correct unrealistic parameterisation. The corrected spore deposition uses an exponential dispersal kernel with scale parameter, $\sigma=$\SI{10}{\meter}.\label{tab:ch5:param_changes}}
+    \begin{tabular}{@{}lp{2cm}p{4cm}p{3cm}@{}}
+        \toprule
+        \textbf{Issue} & \textbf{Parameters affected} & \textbf{Original} & \textbf{Corrected} \\
+        \midrule
+        Spore deposition & $f_0$ & 1.0 & 0.5 \\
+        & $f_1$ & 1.0 & $\propto \exp{-d_{ij}/\sigma}$ \\
+        \midrule
+        Space weights & $w_{1,i}$ & 1/4 of space for each & Space proportional to basal area \\
+        \midrule
+        Recruitment & $b_{1,1}$ & Chosen to give dynamic equilibrium ($\approx{}0.055$) & 0.0 \\
+        \midrule
+        Initial conditions & $S_{1,i}(0)$ & Chosen to give dynamic equilibrium & Equations~\ref{eqn:ch5:tan_init}--\ref{eqn:ch5:tan_0_init} \\
+        \bottomrule
+    \end{tabular}
+    \end{table}
+
+\subsection{Model sensitivity\label{sec:ch5:model_sensitivity}}
+
+\citet{cobb_ecosystem_2012} state that their model is illustrative of the factors affecting tanoak decline, and that precise estimates of timing are not possible given the lack of data at this spatial scale. To confirm that the Cobb model is still realistic after our reparameterisation, we test how sensitive the dynamics are to the exact parameters chosen. The aim here is to make sure that the general model dynamics, if not the exact numeric results, are unchanged for reasonable perturbations in the parameters. We will demonstrate that whilst the precise dynamics are complex, the overall trends in tanoak decline are robust to reparameterisation.
+
+To test sensitivity we randomly perturb all parameters in Table~\ref{tab:ch5:parameters} from the base parameter set. As described before the empty space, tanoak space weights, initial conditions, and bay and redwood recruitment rates are calculated to give dynamic equilibrium for each reparameterisation. Using the perturbed parameter set, we run a forward simulation with no control to predict the future decline of tanoak. Each parameter is perturbed with a normally distributed error, with standard deviation equal to \SI{25}{\percent} of the parameter value. A truncated normal distribution is used to ensure that parameters are not made negative, which would be physically unrealistic. This process is carried out for 100 perturbed parameter sets. The results are shown in figure~\ref{fig:ch5:model_sensitivity}.
+
+These results show that whilst there is variation in the predicted dynamics, the overall trends are highly consistent. Large tanoak is always predicted to decline significantly over the timescale considered, with smaller tanoak taking up a larger proportion of the tanoak age distribution. Bay and redwood are generally expected to increase in numbers, and certainly increase relative to the tanoak population. This sensitivity analysis confirms that the dynamics and main trend found in \citet{cobb_ecosystem_2012} are robust, despite the lack of data for accurate parameterisation.
+
+\begin{figure}[b]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Sensitivity_hosts}
+        \caption[Sensitivity of model dynamics]{Sensitivity of the model dynamics to parameterisation. Solid lines show the dynamics with the baseline parameters. The dotted lines show the median from 100 random parameter perturbations, and the shaded areas show the 5\textsuperscript{th} and 95\textsuperscript{th} percentiles of the distribution. For clarity small tanoak and redwood are shown in \textbf{(a)}, and large tanoak and bay in \textbf{(b)}. In all cases there is significant decline of large tanoak.\label{fig:ch5:model_sensitivity}}
+    \end{center}
+\end{figure}
+\FloatBarrier{}
+
+\section{Stand level disease control\label{sec:ch5:control}}
+
+In the previous section we implemented the Cobb model with realistic spatial dispersal properties, and reparameterised to ensure the invasion timescales were still realistic. We now have a simulation model representative of SOD spread within a mixed species forest stand. Next, we set up the methodology for implementing and optimising control in this model, so that we can address the key questions in this chapter about strategies for protecting tanoak. As in the previous chapter, we will require an approximate model to optimise control, since the simulation model is too complex. We will then use the open-loop and MPC frameworks we previously developed to integrate control strategies into the simulation model, and demonstrate the importance of continued surveillance for effective control. To begin with though, it is necessary to quantify the effectiveness of a given strategy by defining the purpose of control in this system.
+
+\subsection{Management objectives}\label{sec:ch5:mgmt_objs}
+
+As described in Section~\ref{sec:ch5:Intro}, it is important to retain tanoak in the forest stand due to its high cultural and ecological value. We therefore investigate strategies for specifically protecting tanoak, aiming to maintain a population of healthy overstorey tanoak trees in the stand over the medium- to long-term. Following the timescales in \citet{cobb_ecosystem_2012} we look at preventing decline of tanoak over a time horizon ($T$) of 100~years. Since the focus of the control is to ensure tanoak still exists in the future, we treat this as a terminal objective function. By this we mean that the goal is to maximise the number of healthy overstorey tanoak trees at the end of the time horizon, i.e.\ after 100~years.
+
+This objective does not capture everything that is important to maintaining a healthy forest however. A control strategy that protects overstorey tanoak to the detriment of all other trees is clearly suboptimal, and this should be accounted for in the objective function. The diversity of trees in the forest is important for wildlife habitats and food sources, recreational uses and ecological services \citep{swiecki_reference_2013}. More broadly, maintaining diversity ensures that important ecosystem services are carried out efficiently \citep{cadotte_beyond_2011, gamfeldt_higher_2013}. Beyond this, diverse forests are more resilient to disease threats \citep{keesing_impacts_2010}; there is little point to a control strategy that protects tanoak from SOD but makes the forest vulnerable to attack from another disease. The objective function must therefore capture a balance between protection of tanoak, and continued host diversity for provision of ecosystem services.
+
+There are many possible measures of diversity that could be used as part of the management objective. One measure that is very popular in the ecological literature is the Shannon index \citep[][pp.\ 106--108]{magurran_measuring_2013}. The Shannon index originates in information theory, based on the idea that diversity is a measure of the uncertainty in predicting the species of a random individual. The Shannon index is calculated using this equation:
+\begin{equation}\label{eqn:ch5:shannon_idx}
+    H' = -\sum_ip_i\ln{p_i}
+\end{equation}
+where $p_i$ is the proportion of individuals in species $i$. It measures both species richness and species evenness, so is suited to our application in which the number of different species and evenness across species are important. We seek a control scheme that maintains ecosystem services, so it is important that diversity is maintained throughout the simulation time. This ensures that further diversity is not lost during this time in wildlife and other plant life. We therefore choose this to be an integrated metric, integrated over the full time horizon.
+
+Overall then, our management objective is made up of a terminal term preserving healthy large tanoak, and an integrated term maintaining maximum diversity across all times. The mathematical form of the objective is given by:
+\begin{equation}\label{eqn:ch5:mgmt_obj}
+    J = \gamma_1\left(S_{1,3}(T) + S_{1,4}(T)\right) - \gamma_2\left(\int_{t=0}^T \sum_ip_i\ln{p_i}\,\mathop{dt}\right)
+\end{equation}
+where $\gamma_1$ and $\gamma_2$ are the weights associated with the tanoak retention, and diversity conservation objectives respectively. There is are arbitrary choice in the balance between these two terms, which must be chosen by a policy maker or forest manager. In our case we set $\gamma_1$ such that in the disease free case, the first term equals 1. We set $\gamma_2$ such that, in the disease free case again, the second term equals 0.25. Whilst this is an arbitrary choice, we scan over the relative diversity benefit ($\gamma_2$) later in Section~\ref{sec:ch5:div_scan}.
+
+\subsection{Control methods}
+
+Many different methods are recommended for controlling the spread of \textit{P.~ramorum} \citep{swiecki_reference_2013}. The methods can be grouped into three main classes: roguing, thinning and protecting. Roguing methods find and remove infected hosts whereas thinning methods remove hosts regardless of infection status. This removal of hosts is the only control that has been effective at the landscape scale \citep{hansen_2008_epidemiology}. Management recommendations highlight removal of the spreader species bay as very important for effective control \citep{swiecki_reference_2013}, but also recommend removal of infected hosts.
+
+Whilst at the landscape scale host removal is the only effective method, at the smaller scales of a single forest stand protection methods can also be useful. These methods apply chemicals to uninfected trees to reduce their susceptibility to the disease. For SOD the main protectants used are phosphonates, that are approved for use on oak and tanoak species. The treatment only works as a preventative measure but it is recommended for protecting individual hosts \citep{lee_protecting_2010}. Reports of the effectiveness of phosphonate treatment vary, but most studies suggest it slows infection \citep{swiecki_reference_2013}. Application by bark-spray or infection is effective for up around two years \citep{garbelotto_phosphonate_2009}, but evidence is lacking for the impact on host susceptibility. There are also conflicting reports about its efficacy, with some studies finding little effect of treatment \citep{kanaskie_application_2011}. Here we will assume a mild effect of \SI{25}{\percent} reduction in susceptibility.
+
+Roguing controls can be applied separately to infected small tanoak, large tanoak and bay laurel. The hosts are removed and do not resprout, consistent with application of a herbicide to the stump as is sometimes recommended \citep{swiecki_reference_2013}. Thinning also removes hosts, but of all infection status and applied separately to small tanoak, large tanoak, bay and redwood. Table~\ref{tab:ch5:control_methods} summarises the control methods and their effects. Protection can only be applied to small and large tanoaks, and only to susceptible hosts. These hosts are moved into new protected class with the same demographic dynamics (i.e.\ there is a protected class $P_{1,i}$ for each age class $i$ of tanoak). The protected classes have reduced susceptibility (by \SI{25}{\percent}) but return to the susceptible class at a rate of \SI{0.5}{\per\year}. This corresponds to an average time of \SI{2}{\years} before protection wanes.
+
+\begin{table}
+    \centering
+    \caption{\label{tab:ch5:control_methods}}
+    \begin{tabular}{@{}llcc@{}}
+        \toprule
+        \textbf{Control} & \textbf{State changes} & \textbf{Rate} $\eta_I$ / \si{\per\year} & \textbf{Cost} $c_i$ / a.u.\\
+        \midrule
+        Rogue small tanoak & $I_{1, 1\text{--}2} \rightarrow \emptyset$ & 0.25 & 3000\\
+        Rogue large tanoak & $I_{1, 3\text{--}4} \rightarrow \emptyset$ & 0.25 & 6000\\
+        Rogue bay & $I_{2} \rightarrow \emptyset$ & 0.25 & 6000\\
+        \midrule
+        Thin small tanoak & $\{S, I, P\}_{1, 1\text{--}2} \rightarrow \emptyset$ & 1.0 & 250\\
+        Thin large tanoak & $\{S, I, P\}_{1, 3\text{--}4} \rightarrow \emptyset$ & 1.0 & 500\\
+        Thin bay & $\{S, I\}_{2} \rightarrow \emptyset$ & 1.0 & 500\\
+        Thin redwood & $S_{3} \rightarrow \emptyset$ & 1.0 & 500\\
+        \midrule
+        Protect small tanoak & $S_{1, 1\text{--}2} \rightarrow P_{1, 1\text{--}2}$ & 0.25 & 200\\
+        Protect large tanoak & $S_{1, 3\text{--}4} \rightarrow P_{1, 3\text{--}4}$ & 0.25 & 200\\
+        \bottomrule
+    \end{tabular}
+    \end{table}
+
+\subsubsection{Budget constraint}
+
+For each of the 9 controls in Table~\ref{tab:ch5:control_methods}, we seek to find a time-varying control parameter $f_i$ between zero and one, indicating the level of control $i$, that minimises the management objective function. To model economic and logistic constraints we limit the total expenditure per unit time, where this is the product of the number of hosts controlled and the cost of that control method. The mathematical form of this constraint is given by:
+\begin{equation}
+    \sum_i \left(f_i\eta_iX_i\right)c_i \leq B
+\end{equation}
+where $X_i$ is the stem density of the controlled hosts. For example, for roguing of small tanoak $X_i$ would be $\left(I_{1,1} + I_{1,2}\right)$. The term in brackets is therefore the rate of removal of hosts for each control. The cost of each control is given by $c_i$ and the maximum budget is given by $B$.
+
+\subsection{Approximate model}
+
+Optimisation of the chosen management objective using all nine time-dependent controls is computationally infeasible using the full spatial model. To allow progress we use an approximate model and lift control results from this simpler optimisation back to the simulation model, using the methods described in the previous chapter. Here we choose to make the approximate model non-spatial, so as to significantly reduce the state-space for optimisation. Further approximations could be possible, for example grouping together the age classes within the small and large tanoak groups. To ensure that we can lift demographic parameters directly from the simulation model however, we only change the spatial structure of the model. The approximate model therefore assumes that all hosts in the forest stand are well-mixed.
+
+As all other features of the model are retained, the form of the equations is very similar to that of the simulation model (equations~\ref{eqn:ch5:cobb_model_1}) so we will not repeat them here. The only difference is that in the approximate model the dependence on cell ($x$) of the states and empty space ($E$) has been dropped. The form of the force of infection terms is simpler however, since infection no longer spreads between cells. The infection rates in the non-spatial approximate model cannot be lifted from the simulation model, since the approximate model now assumes infection comes from all infected hosts in the stand rather than just those in the immediate spatial vicinity. The force of infection terms in the approximate model are therefore:
+\begin{subequations}\label{eqn:ch5:infection_approx}
+        \begin{align}
+            \tilde{\Lambda}_{1,i} &= \tilde{\beta}_{1,i}\sum_{j=1}^4I_{1,j} + \tilde{\beta}_{12}I_{2} \\
+            \tilde{\Lambda}_{2} &= \tilde{\beta}_{21}\sum_{j=1}^4I_{1,j} + \tilde{\beta}_{2}I_{2}
+        \end{align}
+\end{subequations}
+where $\tilde{\beta}$ indicate fitted infection parameters.
+
+\subsubsection{Fitting infection rates}
+
+The seven infection rates $\tilde{\beta}$ are the only parameters that must be fitted to the simulation model. All other parameters can be lifted directly from the simulation model, since they relate to non-spatial (within cell) processes that are not affected by the removal of the spatial model component. The approximate model cannot capture the heterogeneous mixing present in the simulation model, however, the approximated dynamics may be accurate enough to give effective control strategies when optimised.
+
+We use the method of least squares to match the simulation and approximate models since both models are deterministic. To fit the parameters, the simulation model is used to run a single trajectory with no control interventions. The disease progress curves of this simulation run are then used as the baseline for fitting the approximate model. For a trial set of $\tilde{\beta}$ parameters and an approximate model trajectory, we calculate the sum of squares as the sum of squared deviations between the simulation and approximate disease progress curves for each age class of tanoak, and for bay, at time points throughout the trajectory. The $\tilde{\beta}$ parameters are then optimised by minimising this total summed squared error (SSE). For a set of time points $t_i$, and where approximate model states are signified with a tilde, the equation for SSE is given by:
+\begin{equation}
+    \mathrm{SSE} = \sum_{i}\left[\sum_{j=1}^4\left(I_{1,j}(t_i) - \tilde{I}_{1,j}(t_i)\right)^2 + \left(I_{2}(t_i) - \tilde{I}_{2}(t_i)\right)^2\right]
+\end{equation}
+
+In the simulation model, infectious pressure is dominated by sporulation from bay laurel. This makes estimation of all `within-tanoak' infection rates ($\beta_{1,i}$) difficult as from the simulation data they are individually unidentifiable. We therefore use a two stage fitting process. For the first stage, all infection rates in the simulation model related to bay ($\beta_2$, $\beta_{12}$, and $\beta_{21}$) are set to zero. This makes bay epidemiologically inactive, but maintains the same demographic dynamics. The simulation model is run using these parameters, and the SSE is minimised to find the within tanoak-infection rates.
+
+In the second fitting stage all infection rates are fitted, with bay epidemiologically active again. The within-tanoak rates relative to $\beta_{1,1}$ from the first stage are used as a constraint to ensure the identifiability of these rates. This means a single within-tanoak rate is fitted in stage 2, with all other within-tanoak rates fixed relative to this using the results from stage 1. This stage also fits the bay infection rate, and the cross-species infection rates.
+
+As can be seen in Figure~\ref{fig:ch5:approx_fit}, despite lacking any spatial component, the approximate model can very closely capture the uncontrolled dynamics of the simulation model. However, the approximate model should also fit as accurately as possible when control strategies are introduced. In Figure~\ref{fig:ch5:fit_under_control}, the fit of the approximate model is tested under constant control strategies using fixed control rates. It is clear that roguing at the same rate is more effective in the approximate model. This is because of the difference in mixing between the approximate and simulation models. The effect is small for thinning and protecting, but the same roguing in the approximate and simulation models gives very different dynamics.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Approx_fit}
+        \caption[Fitting of approximate model]{Fitting of the approximate model to match the output of the simulation model. \textbf{(a)} shows the overall stem density for each species class, with the dashed line showing the fitted approximate model. The fit is carried out by matching the disease progress curves as shown in \textbf{(b)}\label{fig:ch5:approx_fit}.}
+    \end{center}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{Graphics/Ch5/Control_fit_test}}
+        \caption[Testing of approximate model under control]{Testing of approximate model under constant control strategies. The rows from top to bottom show dynamics under constant roguing, thinning, and protecting strategies. The left plots show overall host dynamics, and the right plots show the infected host dynamics. The roguing and protecting strategies control at the maximum rates from Table~\ref{tab:ch5:control_methods}, whereas the thinning strategy controls at \SI{10}{\percent} of the maximum rate. The approximate model fits well under constant thinning and protecting strategies, but poorly under a constant roguing strategy. \label{fig:ch5:fit_under_control}}
+    \end{center}
+\end{figure}
+
+\subsubsection{Empirical parameterisation of control}
+
+\todo{Why is control less effective in simulation model?}
+
+As a simple correction for this difference in roguing effectiveness, we investigate a simple scaling of the roguing rate in the approximate model. To test the plausilibilty of single scaling rate for all approximate roguing controls, both models are run with constant roguing strategies. Roguing of small tanoak, large tanoak and bay are all set to the same control rate for the whole simulation, and the rate is varied between simulations. In the approximate model, the control rate is scaled by a single parameter which is also varied, and we analyse the difference in the final number of healthy large tanoak after \SI{100}{\years} between the simulation and approximation (Figure~\ref{fig:ch5:control_scaling}). To minimise the deviation across a range of control rates, the value of the scaling parameter is optimised. We optimise the deviation in the number of large healthy tanoak, since this is the primary objective of the control and must therefore be captured as accurately as possible. The optimisation minimised the sum of squared errors (SSE) over the range of control rates.
+
+The results in Figure~\ref{fig:ch5:control_scaling} show that a single scaling factor can largely eliminate the deviation under constant roguing strategies. We do not expect this scaling to ensure that the approximate model is always closely aligned to the simulation model, particularly once control strategies are time-varying. The approximate model simply cannot capture the heterogeneities in host mixing. This scaling does however go some way to ensuring that control strategies from the approximate model perform well on the simulation model.
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Control_scaling}
+        \caption[Scaling of control rates]{Empirical scaling of approximate model control rates to match simulation output. \textbf{(a)} shows the difference in the final number of large healthy tanoak as a function of the constant roguing rate, for a number of control rate scaling factors. The optimal value minimises the sum of squared errors (SSE) over all rates, as shown in \textbf{(b)}. \textbf{(c)} and \textbf{(d)} show the dynamics with the newly scaled approximate control rates, under a constant roguing strategy. The approximate model now fits the overall host dynamics well, but to do this overestimates the level of infection.\label{fig:ch5:control_scaling}}
+    \end{center}
+\end{figure}
+
+\subsection{Control frameworks}
+
+\todo{Do I need description of OL/MPC again? Or simple reminder para?}
+
+\subsubsection{Control lifting}
+
+The budget constraint is a mixed constraint that couples the control inputs ($f_i$) with the state of the system ($X_i$). When the control inputs are lifted to the simulation model, there is no guarantee of the states being exactly the same, and so the expenditure by the control will not be the same. This can mean that direct lifting of the control inputs will lead to the budget being exceeded. When the budget is exceeded, the control inputs are multiplied by a factor to reduce the overall expenditure to meet the budget constraint. This avoids imposing a priority amongst control methods which would have to be chosen arbitrarily. In mathematical terms, the control inputs from the approximate model depend on the state in the simulation ($X_i$) in the following way:
+\begin{equation}
+    f_i = f_i\frac{B}{\sum_j\left(f_j\eta_jX_jc_j\right)}\;.
+\end{equation}
+This is only the case when the budget is exceeded, otherwise the control inputs $f_i$ are used directly.
+
+\section{Results\label{sec:ch5:results}}
+
+\subsection{Optimal strategies}
+
+We first show the optimal strategies found using OCT on the approximate model. The strategies are lifted to the simulation model using the methods described above for both open-loop and MPC frameworks.
+
+\subsubsection{Open-loop strategies}
+
+The open-loop framework carries out control optimisation on the approximate model, and this strategy is then lifted to the simulation for the full duration of the epidemic. The strategy found using OCT when applied to the simulation is shown in Figure~\ref{fig:ch5:ol_strat}(a). The strategy focusses on thinning of bay, followed by thinning of redwood, early in the epidemic. Roguing is carried out throughout the epidemic but increases towards the end. This is because late in the simulation infection re-emerges, so roguing uses more of the budget than anticipated by the approximate model. There are more infected hosts in the simulation, so it costs more to remove them. This can also be seen in Figure~\ref{fig:ch5:ol_strat}(b), where towards the end of the epidemic in the simulation, there is a decline in the tanoak numbers. This is not captured by the approximate model that anticipates tanoak numbers continuing to increase.
+
+\begin{figure}[!t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/OL_control}
+        \caption[Open-loop control strategy]{Optimal allocation of control resources using the approximate model. \textbf{(a)} shows the allocation over time to each control method, with thinning only during the first \SI{30}{\years{}}. Control proportions ($f$) are fixed over \SI{5}{\year} intervals. Greyed out control methods in the legend are not used. In \textbf{(b)} the corresponding host dynamics are shown for both the simulation and approximate model. The approximation degrades towards the end of the epidemic, leading to unanticipated tanoak decline in the simulation.\label{fig:ch5:ol_strat}}
+    \end{center}
+\end{figure}
+
+The open-loop strategy carries out a large amount of thinning early in the epidemic. As can be seen in Figure~\ref{fig:ch5:ol_div_tan}(a), this severely impacts the stand diversity. Over the course of the epidemic though, the diversity in the simulation returns to close to its initial value. In the approximate model diversity is not expected to recover as much. This reduction in diversity is balanced though, by the retention of tanoak in the stand. As shown in Figure~\ref{fig:ch5:ol_div_tan}(b), the approximate model expects the control strategy to restore the full tanoak population, and increase it above its initial value. This does not happen in the simulation model though, where the late re-emergence results in rapid decline of large healthy tanoak over the final \SI{20}{\years}. Despite this, the open-loop strategy shows a significant improvement over the dynamics under no control intervention. The strategy slows the spread of disease, keeping tanoak in the forest population for an additional \SI{80}{\years}.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/OL_control2}
+        \caption[Open-loop strategy diversity and tanoak decline]{Impact on diversity and tanoak decline of the open-loop framework. The control allocation used is as shown in Figure~\ref{fig:ch5:ol_strat}. \textbf{(a)} shows the impact on the diversity in the forest stand over the course of the epidemic. The initial thinning of bay and redwood results in diversity decline, but it improves over the rest of the epidemic. \textbf{(b)} shows the change in numbers of large and healthy tanoak stems. Importantly, whilst the open-loop strategy shows a significant improvement over no control, the numbers are very different from those predicted by the approximate model.\label{fig:ch5:ol_div_tan}}
+    \end{center}
+\end{figure}
+
+\subsubsection{MPC strategies}
+
+In the MPC framework the approximate and simulation models are run concurrently, with the approximate model reset to match the simulation and re-optimised at regular update steps. These updated controls are then lifted to the simulation model going forward until the next update time. We first test the MPC framework with updates every \SI{20}{\years}. For the first \SI{20}{\years} the control is exactly the same as the open-loop strategy (Figure~\ref{fig:ch5:mpc_strat}), since it is lifted from the same optimisation. After this though, updates result in increased levels of thinning. In particular, after the updates at 60 and \SI{80}{\years} there is significant thinning of bay. This is to stem increased infection in bay, and keep the late disease re-emergence under control. As can be seen in Figure~\ref{fig:ch5:mpc_strat}(b), the updates ensure the approximate model dynamics more closely match the simulation, compared to under open-loop control. The extra thinning of bay slows the disease re-emergence and there is less decline in tanoak numbers.
+
+\begin{figure}[!t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/MPC_control}
+        \caption[MPC control strategy]{Optimal allocation of control resources using the MPC framework. \textbf{(a)} shows the allocation over time to each control method, with black vertical lines showing the update times. Thinning occurs during the first \SI{30}{\years}, but addition thinning of bay is carried out after later updates. Greyed out control methods in the legend are not used. In \textbf{(b)} the corresponding host dynamics are shown for both the simulation and approximate model. The approximation is kept closer to the simulation trajectory, allowing more informed control decisions.\label{fig:ch5:mpc_strat}}
+    \end{center}
+\end{figure}
+
+Figure~\ref{fig:ch5:mpc_performance}(a) shows the dynamics of large healthy tanoak under the MPC framework. Although the approximate model still expects tanoak numbers to increase after each update, keeping the model close to the simulation dynamics improves control. The MPC framework retains approximately \SI{60}{\percent} of the original tanoak population after \SI{100}{\years}. Open-loop only retains \SI{15}{\percent}. Figure~\ref{fig:ch5:mpc_performance}(b) compares the objective function values for open-loop, MPC, no control, and without any disease. We can see that MPC lowers diversity performance compared to open-loop, but in doing this retains significantly more tanoak.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/MPC_control2}
+        \caption[MPC strategy performance]{Performance comparison between open-loop and MPC frameworks. \textbf{(a)} shows the change in large and healthy tanoak numbers, here retaining around \SI{60}{\percent} of the original numbers compared with \SI{15}{\percent} using the open-loop framework. \textbf{(b)} compares the objective values of the control frameworks, splitting the objective into tanoak and diversity components. MPC balances a reduction in diversity compared to open-loop, with a significant improvement in tanoak retenetion.\label{fig:ch5:mpc_performance}}
+    \end{center}
+\end{figure}
+
+Since the updates in MPC improve control, an important question is how often to update the approximate model. Figure~\ref{fig:ch5:mpc_update}(a) shows the effect of changing the update period on the objective. We can see that as updates are made more frequent, control performance generally improves. This is because the approximate model can more closely match the simulation and hence appropriate control decisions can be made. There is however, a dip in performance at update periods of around \SI{50}{\years}. This is due to the precise timing of the updates. The late disease re-emergence occurs at around \SI{80}{\years}. Update periods of around \SI{50}{\years} will not update close to this outbreak, and so the MPC framework cannot respond to that unexpected increase in infection. This results in ineffective control.
+
+Figures~\ref{fig:ch5:mpc_update}(b) and (c) show the MPC control for update periods of 5 and 100 years respectively. The low frequency update corresponds to open-loop control. We can see that the main difference as update frequency increases, is additional continued thinning of bay. This results in less roguing being required later in the epidemic.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/MPC_update}
+        \caption[Effect of MPC update period]{Effect of the MPC update period on control performance. \textbf{(a)} shows the objective value as a function of how often the MPC re-optimises control. Reducing the time until the next update generally improves control, although update periods of around \SI{50}{\years} perform worse than expected. This is because these periods do not update close to the late outbreak, and therefore miss the unexpected increase in infection. \textbf{(b)} and \textbf{(c)} show the control allocations for update periods of 5 and 100 years respectively. The low frequency control here corresponds to open-loop control The high frequency control results in more continued thinning than in the low frequency control.\label{fig:ch5:mpc_update}}
+    \end{center}
+\end{figure}
+
+\subsection{Robust control}
+
+In this section we test the robustness of the results so far. In particular we analyse how parameter choices affect the control strategies and their performance. We then investigate how the open-loop and MPC frameworks handle uncertainty in parameters and imperfect state estimation. These robustness analsyses are important since the data available for fitting within-stand dynamics is limited.
+
+\subsubsection{Budget sensitivity}
+
+First we analyse the effect of the budget constraint. The maximum expenditure was chosen arbitrarily, so how much effect does it have on the optimal control strategy found? Figure~\ref{fig:ch5:budget_scan} shows that in general the control strategy does not depend strongly on the budget. Across budgets largely the same control methods are used. As the budget increases, open-loop can allocate more resources to thinning, and with improved control both frameworks increase resources allocated to protection. It can also be seen that performance generally increases with increasing budget as might be expected. Kinks in this trend are due to some levels of control leading to a closer fit between the simulation and approximation, and hence improved control. At very high budgets control performance starts to degrade with budget. This is because in these cases the control is very effective in the approximate model, and so less control is carried out resulting in worse control in the simulation.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Budget_scan}
+        \caption[Varying the control budget]{Effect of resource budget on control. \textbf{(a)} shows overall allocation of resources to each control method as a function of the maximum budget. Left hand bars show the results for open-loop, right hand bars for MPC\@. We can see that MPC generally allocates more to thinning, and require less roguing. \textbf{(b)} shows the corresponding simulation objectives for the open-loop and MPC frameworks. Control generally improves as the budget increases. Interestingly, only at the lowest budget is any resource allocated to thinning of small tanoak, as shown in \textbf{(c)}.\label{fig:ch5:budget_scan}}
+    \end{center}
+\end{figure}
+
+Interestingly, only at very low budgets, where neither control framework is very effective, do we see thinning of small tanoak. In these cases there are not enough resources to control the disease effectively with roguing of tanoak alone. The next best option in this case is thinning of small tanoak, which whilst it reduces infection, also reduces numbers of healthy tanoak. This is therefore only chosen as a control method when roguing alone is not enough.
+
+\subsubsection{Diversity benefit sensitivity}\label{sec:ch5:div_scan}
+
+Next we test sensitivity to the relative benefit of diversity compared to tanoak retention. In the base case the diversity benefit is chosen such that in the disease free case, the diversity benefit will be \SI{25}{\percent} of the tanoak retention objective value (as described in Section~\ref{sec:ch5:mgmt_objs}). In Figure~\ref{fig:ch5:div_scan} the control allocations and performance are shown, scanning over relative diversity benefit from 0 to \SI{100}{\percent}. It can be seen that the best protection of tanoak, using both open-loop and MPC frameworks, is possible when there is no diversity benefit. As the diversity benefit increases, open-loop allocates fewer resources to thinning, and performance degrades. MPC however, can adapt and maintains high levels of tanoak protection through to the highest diversity benefits.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/DivCostScan}
+        \caption[Varying the diversity cost]{Changes in control strategy and performance as the relative benefit of diversity is changed. Low diversity cost results in more thinning, but improved retention of tanoak in thhe open-loop case. MPC is able to respond to changes in diversity and retain tanoak for all values of the diversity cost.\label{fig:ch5:div_scan}}
+    \end{center}
+\end{figure}
+
+In Figure~\ref{fig:ch5:div_compare} we compare the control strategies and host dynamics with no diversity benefit, and the highest level of benefit. We can see that when there is no benefit to diversity protection, high levels of thinning are carried out that remove all bay and redwood trees. This leads to very effective disease control but is clearly undesirable in a mixed species forest stand. This demonstrates why diversity should be accounted for in the management objective. At the highest diversity benefit all species are retained in the system, but under open-loop control the disease is not controlled well towards the end of the epidemic. The same patterns are seen with the MPC framework, but the updates allow tanoak retention whilst also preserving diversity.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Div_cost_compare}
+        \caption[Host dynamics when varying the diversity cost]{Open-loop control and host dynamics are shown for low diversity cost (\textbf{(a)} and \textbf{(b)}) and high diversity cost (\textbf{(c)} and \textbf{(d)}). Additional thinning is carried out when the diversity cost is low, resulting in complete removal of all bay and redwood trees.\label{fig:ch5:div_compare}}
+    \end{center}
+\end{figure}
+
+\subsubsection{Parameter sensitivity}
+
+Finally, we analyse the sensitivity of the control strategies to the underlying model parameterisation. As in Section~\ref{sec:ch5:model_sensitivity}, all parameters from Table~\ref{tab:ch5:control_methods} are randomly perturbed using a truncated normally distributed error with standard deviation of \SI{25}{\percent}. For each perturbed parameter set the approximate model was re-fitted, and control optimised using both the open-loop and MPC frameworks. The control strategies are compared across parameter sets by visualising the proportion of the budget that is allocated to each control class (thinning, roguing and protecting) over time. By sorting the parameter sets according to the objective function value, we test for any systematic differences in control strategy, for example larger epidemics requiring more thinning.
+
+Figure~\ref{fig:ch5:ol_sensitivity} shows the ordered control strategies using the open-loop framework. There is a very clear shared structure to all control strategies, with thinning always carried out early in the epidemic. Roguing is used throughout, and protection is only used once resource-intensive thinning has stopped. There is no strong systematic pattern to the strategies once ordered by objective value.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Sensitivity_ol_controls}
+        \caption[Open-loop control parameter sensitivity]{Sensitivity of open-loop control strategy to parameterisation. Each row corresponds to a single random parameter perturbation, with the rows ordered by the objective value under open-loop control. \textbf{(a)} shows the change in objective from the baseline parameterisation, with negative values signalling worse epidemics. \textbf{(b)}, \textbf{(c)} and \textbf{(d)} show the allocation of control resources over time to thinning, roguing and protecting control methods respectively. All strategies carry out thinning early in the epidemic, with roguing throughout and protection only after thinning is carried out.\label{fig:ch5:ol_sensitivity}}
+    \end{center}
+\end{figure}
+
+Figure~\ref{fig:ch5:mpc_sensitivity} shows similar results using the MPC framework. Here we can clearly see the additional thinning carried out over the course of the epidemic. The strategies remain similar in structure, with most of the thinning carried out early in the epidemic, roguing throughout, and protection after the initial thinning regime. The difference in objective is here calculated relative to the baseline MPC strategy. Once again, there is little systematic structure when ordered by objective.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Sensitivity_mpc_controls}
+        \caption[MPC strategy parameter sensitivity]{Sensitivity of MPC strategy to parameterisation. As in Figure~\ref{fig:ch5:ol_sensitivity}, the control allocations are shown ordered by objective value, but here using the MPC framework updating every 20 years. Additional thinning is seen compared to open-loop, but no strong systematic pattern is seen.\label{fig:ch5:mpc_sensitivity}}
+    \end{center}
+\end{figure}
+
+\subsubsection{Parameter uncertainty}
+
+In reality, infection rates are rarely known with much precision. These parameters are often fitted to limited data, giving a probability distribution of values. In this section we use this situation, where the simulation infection rates come from a distribution with varying levels of uncertainty. We then test how the control frameworks handle this uncertainty. The parameter distribution is chosen to be normal (truncated so that infection parameters remain positive), and the standard deviation is varied to imitate varying levels of uncertainty. For each level of uncertainty an ensemble of 100 simulations is generated, with each using a infection rate parameter set drawn from the distribution. A single approximate model is then fitted to this ensemble for each level of uncertainty (Figure~\ref{fig:ch5:param_uncert_fit}).
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Param_uncert_fit}
+        \caption[Ensemble fitting under parameter uncertainty]{Example of fitting to ensemble data for parameter uncertainty analysis. Here we show data using uncertainty in infection parameters with a standard deviation of \SI{20}{\percent}. An ensemble of 100 simulations with no control are carried out, and the approximate model is fitted to this ensemble. Control will then be tested on simulations with parameters drawn from the same distribution. \textbf{(a)}, \textbf{(b)} and \textbf{(c)} show the number of infected small tanoak, large tanoak and bay hosts respectively, for the ensemble and fitted approximate model.\label{fig:ch5:param_uncert_fit}}
+    \end{center}
+\end{figure}
+
+To test control on these parameter distributions, for a single draw of infection rates from the distribution, the fitted approximate model is used to run the open-loop and MPC frameworks. This is repeated for \todo{$N$} draws from each distribution. Figure~\ref{fig:ch5:param_uncert} shows the results of this experiment. As the infection rate distribution broadens, making the parameters more uncertain, the range of objective values obtained increases for both open-loop and MPC\@. Both frameworks result in improved control as uncertainty increases, due to parameter sets being drawn that result in easier to control epidemics. Looking at the distribution of objective values at the largest level of uncertainty (\SI{40}{\percent}; Figure~\ref{fig:ch5:param_uncert}(b)) we can see that where objectives are high, and epidemics are therefore easy to control, there is little difference between open-loop and MPC\@. This is why the median performance of open-loop and MPC are very similar at high parameter uncertainty.
+
+At the lower end of objectives though, where the epidemic is harder to control, MPC shows a significant improvement over open-loop. In Figure~\ref{fig:ch5:param_uncert}(b) the worse case scenario is improved by using MPC rather that open-loop. Looking at relative improvement (difference in objectives divided by open-loop objective; Figure~\ref{fig:ch5:param_uncert}(c)), MPC retains a tanoak population twice as large as that under open-loop. MPC is therefore useful for limiting the worst case scenario under parameter uncertainty, highlighting the importance of continued surveillance when disease progression cannot be predicted accurately.
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Param_uncert}
+        \caption[Performance of OL and MPC under parameter uncertainty]{Effect of parameter uncertainty on the performance of open-loop and MPC strategies. In \textbf{(a)}, shaded areas show the 5\textsuperscript{th} to 95\textsuperscript{th} percentiles of the objective values, with the medians shown as solid lines, as a function of parameter uncertainty. The parameter uncertainty is the standard deviation used to perturb the infection rate parameters in the ensemble of simulations. \textbf{(b)} shows the distribution of objectives for open-loop and MPC, using a parameter uncertainty of \SI{40}{\percent}. The MPC framework improves performance in the worst case epidemics. In \textbf{(c)} the relative difference between open-loop and MPC objectives is shown. We can see that for cases where open-loop performs poorly, MPC is significantly better.\label{fig:ch5:param_uncert}}
+    \end{center}
+\end{figure}
+\FloatBarrier
+\subsubsection{Observational uncertainty}
+
+Next, we analyse the performance of MPC when surveillance at the updates is imperfect. Surveillance at the initial time is here assumed to be perfect, since control starts at this time the infection must behave been observed. As the epidemic starts with very few initial infected hosts, the surveillance at this time must have been effective. It is therefore assumed to be perfect. At later update times though, only a proportion of the forest stand is sampled leading to imperfect observation of the epidemic state. Each cell in the simulation model is divided into 500 \SI{1}{\meter\squared} discrete units. Each unit can contain either host (tanoak 1--4, bay, or redwood), or be empty. Surveillance at update steps is then carried out by observing a fixed number of units in each cell across the landscape, without replacement. Infection status of tanoak and bay hosts is determined randomly, with probabilities matching the proportion of that host that is infected. The results are shown in Figure~\ref{fig:ch5:obs_uncert}.
+
+The results show that as the proportion of area sampled decreases, the uncertainty in the outcome of MPC increases. The median performance of MPC also decreases. This is because as less of the forest is sampled, there is a higher chance that infection will be missed entirely during surveillance. The framework at that update step is then optimising control in the absence of disease. This clearly reduces the efficacy of the resulting control strategy. In Figure~\ref{fig:ch5:obs_uncert}(b) we show the effect this could have on the overall costs of disease management. Combining costs per survey that are proportional to the area sampled, with the cost benefits from the management objective, we see that there is an optimal intensity of surveillance to carry out. Whilst this clearly depends on actual costs incurred, and the balance between tanoak protection, diversity conservation, and treatment costs, there is a clear need for some level of surveillance. It can also be seen that to minimise the 95\textsuperscript{th} percentile a higher intensity of surveillance is required. This would represent control policy of a risk-averse manager.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Obs_uncert}
+        \caption[Performance of MPC under observational uncertainty]{\textbf{(a)} shows the objective value when there is observational uncertainty at MPC updates. The uncertainty is modelled as random sampling of a proportion of the forest stand area. Shaded areas show the 5\textsuperscript{th} to 95\textsuperscript{th} percentiles of the objective values. \textbf{(b)} shows the corresponding overall cost under observational uncertainty, including costs for MPC update surveys. Reduced costs of less intensive surveying must be balanced with less effective control when there is uncertainty about the pathogen extent.\label{fig:ch5:obs_uncert}}
+    \end{center}
+\end{figure}
+
+\subsection{Global optimal strategy}
+
+Control scaling allowed approximate model to better match simulation model. But carried out under constant control. Can reparameterise control now that we know what the optimal strategy is - allowing refinement of this policy.
+
+Reparameterising gives better fitting approximate model, then use this to optimise control. Control strategy found does...
+
+\begin{figure}
+    \begin{center}
+        % \includegraphics[width=0.95\textwidth]{Graphics/Ch5/Obs_uncert}
+        \caption[Globally optimal strategy]{\label{fig:ch5:global_optimal}}
+    \end{center}
+\end{figure}
+
+\section{Discussion\label{sec:ch5:discussion}}
+
+\section{Conclusions\label{sec:ch5:conclusions}}

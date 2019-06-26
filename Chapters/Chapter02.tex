@@ -1,0 +1,57 @@
+\chapter{Optimal control theory}\label{ch:oct}
+
+\section{Introduction}\label{sec:ch2:intro}
+
+This chapter is about...
+
+\section{Background}\label{sec:ch2:background}
+
+How/why OCT developed. What OCT can do.
+
+Brief overview of principles. Refer to others for details.
+
+\section{OCT within epidemiology}\label{sec:ch2:oct_in_epidem}
+
+General use in OCT - dynamic models of complex systems with clear goal for interventions.
+
+\subsubsection{Early work \& general principles}
+
+Sethi original work. Simple models. Bang-bang control. Switching control here or next para?
+
+More complex and general case \citep{behncke_optimal_2000}. Still see bang-bang controls, concept of `front-loading'.
+
+\subsubsection{Bioeconomics}
+
+History and nature of optimisation - closely relate to economics literature. Importance of economics in epidemiology. Use of OCT to find cost-effective strategies.
+
+To define what cost-effective means - need clearly defined and quantified objective. Importance of choosing objective in epidemiology, and effect on balancing of controls.
+
+\subsubsection{State of the art and outstanding questions}
+
+Added complexity in models and controls. Despite this, models must necessarily be highly simplified representations of system - can only test on more realistic models. \citet{rowthorn_optimal_2009} and testing of switching strategies.
+
+In plant disease, space important feature. Simple metapopulation models used. More advanced lattice models. Additional testing of robustness of OCT strategies.
+
+Spatial control a difficult feature to capture due to dimensionality. As well as previous examples, some use PDE type models, or revert to simpler optimisations and models \citep{epanchin_optimal_2012}.
+
+\section{Optimisation methods}\label{sec:ch2:optim_methods}
+
+Brief intro - numerical methods for solving the optimal control problem. Refer to \citep{betts_practical_2010} for overview of methods. Here describe main two classes, and implementation of each.
+
+\subsection{Indirect formulation}
+
+Overview of theory, mathematical form, and resulting optimisation problem. Connection to necessary conditions, and base OCT - could give  more insight due to relation to analytic solutions.
+
+Forward-backward sweep method algorithm.
+
+Limitations of FBSM.
+
+\subsection{Direct formulation}
+
+Outline of approach and difference to indirect approach.
+
+Direct collocation algorithm.
+
+\section{Conclusions}
+
+Key point of chapter - types of OCT strategy, two main classes of optimisation method \& why might choose each.
