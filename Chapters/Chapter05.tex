@@ -133,6 +133,8 @@ where tanoak dynamics are given by equations~\ref{eqn:ch5:cobb_model_1} and \ref
     \end{tabular}
     \end{table}
 
+
+
 The recruitment rates are density dependent as they depend on the space available for recruitment in each cell, $E_x$. The empty space in cell $x$ is given by:
 \begin{equation}
     E_x = 1 - W_1\sum_{i=1}^4w_{1,i}\left(S_{1,i,x} + I_{1,i,x}\right) - W_2\left(S_{2,x} + I_{2,x}\right) - W_3S_{3,x} \;.
@@ -146,7 +148,6 @@ so that recruitment is from all age classes, with seed production rates that are
 Finally we describe the force of infection terms $\Lambda$ in equations~\ref{eqn:ch5:cobb_model}:
 \begin{subequations}\label{eqn:ch5:infection}
     \begin{alignat}{5}
-        % TODO equations....
         \Lambda_{1,i,x} &= f_0\left[\beta_{1,i}\sum_{j=1}^4I_{1,j,x} + \beta_{12}I_{2,x}\right] &+& f_1\sum_{y\in N(x)}\left[\beta_{1,i}\sum_{j=1}^4I_{1,j,y} + \beta_{12}I_{2,y}\right] \label{eqn:ch5:infection_1}\\
         \Lambda_{2,x} &= f_0\left[\beta_{21}\sum_{j=1}^4I_{1,j,x} + \beta_{2}I_{2,x}\right] &+& f_1\sum_{y\in N(x)}\left[\beta_{21}\sum_{j=1}^4I_{1,j,y} + \beta_{2}I_{2,y}\right] \label{eqn:ch5:infection_2}
     \end{alignat}
@@ -540,7 +541,7 @@ In reality, infection rates are rarely known with much precision. These paramete
     \end{center}
 \end{figure}
 
-To test control on these parameter distributions, for a single draw of infection rates from the distribution, the fitted approximate model is used to run the open-loop and MPC frameworks. This is repeated for \todo{$N$} draws from each distribution. Figure~\ref{fig:ch5:param_uncert} shows the results of this experiment. As the infection rate distribution broadens, making the parameters more uncertain, the range of objective values obtained increases for both open-loop and MPC\@. Both frameworks result in improved control as uncertainty increases, due to parameter sets being drawn that result in easier to control epidemics. Looking at the distribution of objective values at the largest level of uncertainty (\SI{40}{\percent}; Figure~\ref{fig:ch5:param_uncert}(b)) we can see that where objectives are high, and epidemics are therefore easy to control, there is little difference between open-loop and MPC\@. This is why the median performance of open-loop and MPC are very similar at high parameter uncertainty.
+To test control on these parameter distributions, for a single draw of infection rates from the distribution, the fitted approximate model is used to run the open-loop and MPC frameworks. This is repeated for 200 draws from each distribution. Figure~\ref{fig:ch5:param_uncert} shows the results of this experiment. As the infection rate distribution broadens, making the parameters more uncertain, the range of objective values obtained increases for both open-loop and MPC\@. Both frameworks result in improved control as uncertainty increases, due to parameter sets being drawn that result in easier to control epidemics. Looking at the distribution of objective values at the largest level of uncertainty (\SI{40}{\percent}; Figure~\ref{fig:ch5:param_uncert}(b)) we can see that where objectives are high, and epidemics are therefore easy to control, there is little difference between open-loop and MPC\@. This is why the median performance of open-loop and MPC are very similar at high parameter uncertainty.
 
 At the lower end of objectives though, where the epidemic is harder to control, MPC shows a significant improvement over open-loop. In Figure~\ref{fig:ch5:param_uncert}(b) the worse case scenario is improved by using MPC rather that open-loop. Looking at relative improvement (difference in objectives divided by open-loop objective; Figure~\ref{fig:ch5:param_uncert}(c)), MPC retains a tanoak population twice as large as that under open-loop. MPC is therefore useful for limiting the worst case scenario under parameter uncertainty, highlighting the importance of continued surveillance when disease progression cannot be predicted accurately.
 

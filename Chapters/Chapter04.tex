@@ -83,6 +83,7 @@ Trajectories are simulated using the Gillespie direct method \citep{gillespie_ex
 Optimal allocation of vaccination resources minimises an epidemic cost $J$ representing the disease burden of the epidemic across all infected hosts over the simulation time ($T$): $J = \int_{t=0}^TI(t)\mathrm{d}t$ (\todo{Has $I$ been defined?}). In common with the particular control we consider and the risk and spatial structures, this simple choice of objective function was made merely to illustrate our methods, but \todo{as shown in Chapters 5 and 7??} the framework generalises immediately to more complex settings.
 
 \begin{table}
+    \caption{Possible events in the simulation model with associated rates.\label{tab:ch4:rates}}
     \begin{tabular}{@{}lll@{}}
         \toprule
         \textbf{Event} & \textbf{State Change} & \textbf{Rate} \\
@@ -95,11 +96,10 @@ Optimal allocation of vaccination resources minimises an epidemic cost $J$ repre
         Recovery & $I_i^r \rightarrow S_i^r$ & $\nu{}I_i^r$\\
         \bottomrule
     \end{tabular}
-    \caption{Possible events in the simulation model with associated rates.}
-    \label{tab:ch4:rates}
 \end{table}
         
 \begin{table}[htb]
+    \caption{Parameter values used for simulation model trajectories.\label{tab:ch4:parameters}}
     \begin{tabular}{@{}lll@{}}
         \toprule
         \textbf{Meaning} & \textbf{Parameter} & \textbf{Default Value} \\
@@ -120,8 +120,6 @@ Optimal allocation of vaccination resources minimises an epidemic cost $J$ repre
         Transmission Rate & $\beta$ & \SI{2.5}{\per\host\per\t{}}\\
         \bottomrule
     \end{tabular}
-    \caption{Parameter values used for simulation model trajectories.}
-    \label{tab:ch4:parameters}
 \end{table}
 
 \subsection{Approximate models}

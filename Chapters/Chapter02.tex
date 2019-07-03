@@ -1,3 +1,5 @@
+% !TEX root = ../thesis.tex
+%
 \chapter{Optimal control theory}\label{ch:oct}
 
 \section{Introduction}\label{sec:ch2:intro}
@@ -6,9 +8,41 @@ This chapter is about...
 
 \section{Background}\label{sec:ch2:background}
 
-How/why OCT developed. What OCT can do.
+Optimal control theory (OCT) is the field of mathematics concerned with finding time-varying inputs to dynamic systems, optimised to maximise some performance metric. The dynamical system could be a system of ODEs, PDEs, or discrete difference equations, controlled by an input variable, or combination of variables, that can be varied from outside the system. The field developed as an extension to the calculus of variations, with roots also in classical control theory, random processes, and linear and nonlinear programming \citep{bryson_optimal_1996}. In the 1950s, Bellman developed dynamic programming, a method for finding optimal controls by recursively solving smaller problems \citep{bellman_dynamic_2013}. These methods struggle to solve realistic problems because of the `curse of dimensionality', where as the number of state and control variables increases, the memory required to solve the recursive problem becomes impractical.
 
-Brief overview of principles. Refer to others for details.
+Later work by \citet{pontryagin_mathematical_1962} extended work from calculus of variations to find a necessary condition for the maximising path. This method explores extremal paths individually and so avoids dimensionality issues. This condition is contained in Pontryagin's famous `maximum principle', the main theory underlying much of OCT. We will now summarise this principle but we do not describe the mathematics here. Further details can be found in \citet{lenhart_optimal_2007}. The principle relates to a differential equation system for a state $x$, described as follows:
+\begin{equation}
+    \dot{x}(t) = f(x(t), u(t), t);\quad{}x(0)=x_0;\quad{}t\in{}\left[0, T\right]\;.
+\end{equation}
+The control function $u(t)$ must be chosen so as to maximise the objective function $J$:
+\begin{equation}
+    J = \Psi{}(x(T)) + \int_0^TL(x(t), u(t), t)\,\mathop{dt}\;.
+\end{equation}
+The overall optimisation problem is therefore:
+\begin{subequations}\label{eqn:ch2:opt_problem}
+    \begin{align}
+        \max_u \quad{} &\null \Psi{}(x(T)) + \int_0^TL(x(t), u(t), t)\,\mathop{dt} \label{eqn:ch2:opt_problem_a}\\
+        \text{subject to} \quad{} &\null \dot{x}(t) = f(x(t), u(t), t) \label{eqn:ch2:opt_problem_b}\\
+        &\null x(0)=x_0 \label{eqn:ch2:opt_problem_c}
+    \end{align}
+\end{subequations}
+
+The maximum principle states that if $u^*(t)$ and $x^*(t)$ are optimal for this system, then there must exist an adjoint system $\lambda(t)$ such that:
+\begin{equation}
+    H(t, x^*(t), u(t), \lambda(t)) \leq H(t, x^*(t), u^*(t), \lambda(t))
+\end{equation}
+for all time $t \in \left[0, T\right]$. The Hamiltonian $H$ is given by:
+\begin{equation}
+    H(t, x(t), u(t), \lambda(t)) = L(x(t), u(t), t) + \lambda(t)f(x(t), u(t), t)
+\end{equation}
+and the adjoint system satisfies:
+\begin{subequations}\label{eqn:ch2:adjoint_system}
+    \begin{align}
+        \dot{\lambda}(t) &= \frac{\partial H(t, x(t), u(t), \lambda(t))}{\partial x} \label{eqn:ch2:adjoint_system_a}\\
+        \lambda(T) &= \frac{\partial \Psi(x(T))}{\partial x}\;. \label{eqn:ch2:adjoint_system_b}
+    \end{align}
+\end{subequations}
+The terminal constraint in the adjoint system is known as the transversality condition. This maximum principle can then be used to find solutions to the optimisation problem described above.
 
 \section{OCT within epidemiology}\label{sec:ch2:oct_in_epidem}
 
@@ -36,21 +70,42 @@ Spatial control a difficult feature to capture due to dimensionality. As well as
 
 \section{Optimisation methods}\label{sec:ch2:optim_methods}
 
-Brief intro - numerical methods for solving the optimal control problem. Refer to \citep{betts_practical_2010} for overview of methods. Here describe main two classes, and implementation of each.
+There are many numerical methods for solving the optimisation problem described in Equations~\ref{eqn:ch2:opt_problem}. These methods can be grouped into two main classes: indirect and direct methods. Indirect methods find roots of the necessary condition given by the Pontryagin maximum principle, whereas direct methods find a sequence of controls that minimise the objective function without using the adjoint system \citep{betts_practical_2010}. We will briefly describe a formulation using each of these methods, but refer to \citet{betts_practical_2010} for a comprehensive discussion of numerical methods for optimal control problems.
 
 \subsection{Indirect formulation}
 
-Overview of theory, mathematical form, and resulting optimisation problem. Connection to necessary conditions, and base OCT - could give  more insight due to relation to analytic solutions.
+Indirect methods construct the necessary conditions given by the Pontryagin maximum principle for the system in question. This involves forming the Hamiltonian and the adjoint system. The necessary conditions are then used to find an expression for $u^*$ in terms of the optimal state ($x^*$) and the adjoint ($\lambda$). This can be used to solve for $x^*$ and $\lambda$ with the boundary conditions, finally allowing $u^*$ to be calculated. The process effectively optimises the system, then discretises to solve for the optimal control.
 
-Forward-backward sweep method algorithm.
+More specifically, since the initial conditions for the state system, and the terminal conditions for the adjoint system are known (Equations~\ref{eqn:ch2:opt_problem_c} and \ref{eqn:ch2:adjoint_system_b}), then the necessary conditions become a two point boundary problem. This state-adjoint system will be solved when the control function is optimal ($u^*$). The forward-backward sweep method (FBSM) is a simple numerical algorithm for solving this formulation of the optimal control problem \citep{lenhart_optimal_2007}. The method is described in Algorithm~\ref{alg:ch2:fbsm}.
 
-Limitations of FBSM.
+\begin{algorithm}
+    \caption{The forward-backward sweep method (FBSM) algorithm from \citet{lenhart_optimal_2007}, for solving optimal control problems using the indirect formulation.\label{alg:ch2:fbsm}}
+    \begin{enumerate}
+        \item Make an initial estimate for $u(t)$.
+        \item Using this control and the initial condition $x(0)=x_0$, solve the state system forward in time.
+        \item Using the adjoint terminal condition (Equation~\ref{eqn:ch2:adjoint_system_b}), and the values for control and state, solve the adjoint system backwards in time.
+        \item Update the control $u(t)$ using the new state and adjoint values.
+        \item Check for convergence. If the system has not converged to an optimal control, return to step 2 using the updated control.
+    \end{enumerate}
+\end{algorithm}
+
+The FBSM is based in the necessary conditions for optimality. This means that the results are closely connected to the underlying mathematics of the optimal control theory. This can help to give more insight into the meaning of the resulting controls, since the underlying dynamics that influence the control are analytically described. There are however, a number of limitations to using the indirect formulation. Firstly, this close connection to the optimality conditions means that significant work is necessary to set up the optimisation problem. The Hamiltonian, adjoint dynamics, and transversality conditions must all be derived. This can be mathematically challenging, and is inherently not flexible since the equations must be derived for each new problem \citep{betts_practical_2010}. Further to this, there can be issues with the convergence of the FBSM. The convergence can be highly sensitive to the initial guess for the optimal control, and the method may never converge to a solution.
 
 \subsection{Direct formulation}
 
-Outline of approach and difference to indirect approach.
+The direct formulation differs from the indirect in that it does not rely on the derivation of the Hamiltonian or adjoint system. Direct formulation methods discretise the dynamic system first, and then optimise this rather than optimising using the optimality conditions. One method for solving a direct formulation problem is the direct transcription process. This method discretises the state and control in time, and treats the values of the state and control at these discrete times as optimisation variables in a nonlinear programming (NLP) problem. Within the NLP problem, the state dynamics and initial conditions are included as constraints on the NLP variables, and the optimisation is carried out to minimise the objective value.
 
-Direct collocation algorithm.
+Whilst it may seem excessive to be directly optimising all the state variables, since each variable only directly influences variable that are close in time the problem becomes large but sparse. This sparsity can be exploited by numerical optimisation routines, and is often simpler to solve than a small, dense problem in which the state is not discretised and optimised \citep{betts_practical_2010}. The state dynamics constraints are constructed as a discretisation of the state ODE system, often using an implicit Runge-Kutta scheme. For example, following the standard approach in \citet{betts_practical_2010}, if the state-control system is discretised on $M$ grid points, the NLP variables are given by:
+\begin{equation}
+    \bm{y}^\mathrm{T} = \left(\bm{x}_1, \bm{u}_1, \ldots \bm{x}_M, \bm{u}_M\right)\;.
+\end{equation}
+Using an Euler discretisation scheme, the state ODEs ($\dot{\bm{x}} = \bm{f}(\bm{x}, \bm{u}, t)$) can be approximated by the following NLP constraints:
+\begin{equation}
+    \bm{0} = \bm{x}_{k+1} - \bm{x}_k - \frac{h_k}{2}\left(\bm{f}_{k+1} + \bm{f}_k\right) \equiv \bm{c}(\bm{y})
+\end{equation}
+The NLP variables $\bm{y}$ are then optimised subject to these constraints using an NLP solver.
+
+The advantages of the direct over the indirect formulation are in its flexibility and robustness. Since the Hamiltonian and adjoint are not required, and gradients can be estimated using finite differences, the method can be used for any system without analytic derivatives. Furthermore, there is extensive literature and software available for solving large, sparse NLP problems. This means the optimisations can be fast, efficient and robust. Whilst the method does still require an initial guess for both the control and the state variables, the NLP problem has a much larger region of convergence than the root finding in indirect methods \citep{betts_practical_2010}.
 
 \section{Conclusions}
 
