@@ -1,1 +1,79 @@
+% !TEX root = ../thesis.tex
+%
 \chapter{A simple case: protecting a high value region}\label{ch:three_patch}
+
+\section{Introduction}\label{sec:ch3:intro}
+
+This chapter is about...
+
+\section{Methods}
+
+Overview of methods, patch model, control methods, and solving the optimisation problem.
+
+\subsection{Invasion model}
+
+Description of abstraction to patch model, with high value region and external source of inoculum from generally infested region.
+
+Mathematical description of model and parameterisation, with controls.
+
+\subsection{Optimal control problem}
+
+Objective of control and budget constraint.
+
+Possible expected outcomes. Overview of direct and indirect approaches.
+
+\subsection{Indirect formulation}
+
+Pontryagin maximum principle sets up a two point boundary problem; state and adjoint state. Derivation of Hamiltonian.
+
+Hamiltonian used to derive adjoint dynamics; equations.
+
+Reminder of FBSM algorithm; how is determination of control carried out --- minimise Hamiltonian subject to constraint.
+
+\subsubsection{Mixed constraint}
+
+Overview of how mixed state/control constraint could be handled fully; and demonstration that has same effect on equations.
+
+\subsection{Direct formulation}
+
+Description of BOCOP: inputs and algorithm/optimiser used.
+
+\section{Results}
+
+\subsection{Optimal strategies}
+
+Intuitive standard strategy found.
+
+Switching strategy description. Effect of beta on switch time --- intermediate infection rates lead to Switching.
+
+Explain that switching is more than just FOI, i.e.\ it is not just switching when FOI internal to region 3 is larger than from region 2.
+
+\subsection{Formulation comparison}
+
+Concept of using switch time as metric for comparing accuracy of direct and indirect formulations. Shows that both agree, although direct finds optimum in some cases where FBSM does not.
+
+Additional difficulties of FBSM: convergence issues. Compare time to solve problem.
+
+\subsection{Parameter sensitivity}
+
+Effect of parameterisation on switching time. Initial conditions and external FOI.
+
+Effect of budget and control rates.
+
+\subsection{Testing robustness}
+
+Application of optimised control strategy to version of model with incorrectly parameterised infection rate. Leads to suboptimal control.
+
+Application to stochastic version of model.
+
+\section{Discussion}
+
+Advantage of optimal control $\rightarrow$ finds less intuitive controls. But benefit of switching has to be balanced with addition costs of performing the switch.
+
+General control strategies $\rightarrow$ bang-bang switching controls. Effect of getting switch time wrong, limited by simplicity of model.
+
+Comparison of methods shows that direct formulation is more robust, and much simpler to implement. Therefore use this going forwards.
+
+\section{Conclusions}
+
+Switching important; direct methods better; results from simplified model do not stand up when complexity added.
