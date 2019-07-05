@@ -4,39 +4,136 @@
 
 \section{Introduction}\label{sec:ch3:intro}
 
-This chapter is about...
+Whilst established diseases can be difficult or impossible to eradicate, local control to protect high value resources can still be effective. In this chapter we will investigate how the optimal control methods from the previous chapter can be applied to a simple model of disease invasion into a high value region. We will use the optimisation methods to find controls that best protect the high value region. The sudden oak death epidemic in California cannot be controlled at the landscape scale, but there are still highly valuable local resources that could be protected from the disease. This includes commercially valuable timber stocks, and areas important ecologically or for tourism, such as national parks. Optimally allocating limited control resources could significantly improve protection of valuable regions, but we seek to answer how to characterise these optimal strategies.
+
+In this chapter we use OCT to find an optimal time varying allocation of limited control resources, balancing control in a buffer region and a high value region. We will show how these controls can be optimally deployed to minimise disease in the high value region. We show that two main strategies arise: one prioritising control in the high value region, and the other switching prioritisations during the course of the epidemic. The sensitivity of the control strategy to the model parameterisation is tested, and we show that OCT results do not always remain effective when tested on more complex models.
 
 \section{Methods}
 
-Overview of methods, patch model, control methods, and solving the optimisation problem.
+In this section we will develop a simple model that captures the dynamics of a pathogen threatening to invade a high value region. The model will incorporate control through removal of infected hosts, and we will set up an optimal control problem to determine where limited resources should be allocated to this control over time. The optimisation problem will be solved using both the direct and indirect formulations described in the previous chapter.
 
 \subsection{Invasion model}
 
-Description of abstraction to patch model, with high value region and external source of inoculum from generally infested region.
+The model splits the host landscape into three regions: a generally infested area where the disease is well established, a buffer region, and a the high value region that is to be protected. To reduce the number of parameters the infested region is modelled as a source of external inoculum, generating a force of infection on the buffer region. The buffer and high value regions are modelled as well-mixed patches, meaning the only spatial component is the between-patch coupling. An SIR model is used for the epidemic dynamics \citep{keeling_modeling_2008}, where hosts can be susceptible to the disease ($S$), infected by the disease and infectious ($I$), or removed by the disease or control ($R$). As the model is based on SOD dynamics, removal represents both death caused by the pathogen, and roguing as part of the disease management. This roguing is the control method that will be optimised. A schematic of the model is shown in Figure~\ref{fig:ch3:model_schematic}.
 
-Mathematical description of model and parameterisation, with controls.
+\begin{figure}
+    \begin{center}
+        % \includegraphics[width=0.95\textwidth]{Graphics/Ch3/Model_schematic}
+        \caption[Model schematic]{\label{fig:ch3:model_schematic}}
+    \end{center}
+\end{figure}
+
+Each patch has a fixed population size ($N_B$ and $N_V$ for the buffer and high value regions respectively), and the two patches are linked by a coupling constant $\epsilon$. The within-patch transmission rate is given by $\beta$, leading to the following system of ODEs:
+\begin{subequations}\label{eqn:ch3:patch_model}
+    \begin{align}
+        \dot{S}_B &= -\mathcal{F}S_B - \beta{}I_BS_B - \epsilon\beta{}I_VS_B \label{eqn:ch3:patch_model_a}\\
+        \dot{I}_B &= \mathcal{F}S_B + \beta{}I_BS_B + \epsilon\beta{}I_VS_B - \mu{}I_B-f_B\eta{}I_B \label{eqn:ch3:patch_model_b}\\
+        \dot{S}_V &= -\beta{}I_VS_V - \epsilon\beta{}I_BS_V \label{eqn:ch3:patch_model_c}\\
+        \dot{I}_V &= \beta{}I_VS_V + \epsilon\beta{}I_BS_V - \mu{}I_V-f_V\eta{}I_V \label{eqn:ch3:patch_model_d}
+    \end{align}
+\end{subequations}
+where the subscripts $B$ and $V$ refer to the buffer and high value patches respectively. The external force of infection from the infested region is given by $\mathcal{F}$. The infectious period of the disease is given by $1/\mu$, and hosts are removed by roguing at a rate $\eta$. The time dependent control inputs $f_B$ and $f_V$ are the proportion of infected hosts that are being controlled at that time in the buffer and high value regions respectively. Throughout we scale time by the infectious period, such that the disease induced removal rate $\mu$ is equal to one.
 
 \subsection{Optimal control problem}
 
-Objective of control and budget constraint.
+The objective of control in this system is to protect the high value region from infection. Optimisation of the roguing strategy should minimise the impact of the pathogen in the high value region. We choose an objective of minimising the number of infected and removed hosts at the terminal time $T$. The population size is constant in each region, so this is equivalent to maximising the number of healthy and susceptible, high value hosts that are retained in the system. We impose a restriction on the number of hosts that can be rogued per unit time to capture the economic and logistical limitations to disease management. The maximum expenditure rate, or number of hosts treated per unit time across both patches, is given by $M$. This gives the following optimal control problem:
+\begin{subequations}\label{eqn:ch3:opt_problem}
+    \begin{align}
+        \min_{f_i(t)} \quad{} &\null J = N_V(T) - S_V(T) \label{eqn:ch3:opt_problem_a}\\
+        \text{subject to} \quad{} &\null f_B(t)I_B(t) + f_V(t)I_V(t) \leq M \quad \forall t \label{eqn:ch3:opt_problem_b}\\
+        &\null 0\leq f_i \leq 1\label{eqn:ch3:opt_problem_c}
+    \end{align}
+\end{subequations}
+where the dynamics are given by Equations~\ref{eqn:ch3:patch_model}.
 
-Possible expected outcomes. Overview of direct and indirect approaches.
+In the absence of the budget constraint it might be expected that control would be maximal at all times, treating all infected hosts in both regions throughout the epidemic. We might expect therefore, that with the constraint the optimal strategy would prioritise control in the more important region, the value region, and allocate any remaining resource to the buffer region. We will test this hypothesis using the OCT framework introduced in the previous chapter, and use this simple system to compare the direct and indirect OCT frameworks. The following sections formulate the two versions of the optimal control problem.
 
 \subsection{Indirect formulation}
 
-Pontryagin maximum principle sets up a two point boundary problem; state and adjoint state. Derivation of Hamiltonian.
+In the indirect formulation the Pontryagin maximum principle is used to set up an adjoint system, and a Hamiltonian that is minimised along the optimal control path. The adjoint system ($\vect{\lambda}$) dynamics and Hamiltonian $H$ are defined by the following equations:
+\begin{subequations}\label{eqn:ch3:adjoint_hamiltonian}
+    \begin{align}
+        \dot{\vect{\lambda}} &= -\frac{\partial{}H}{\partial\vect{x}} \label{eqn:ch3:adjoint_hamiltonian_a}\\
+        H &= \vect{\lambda}\cdot\vect{x} \label{eqn:ch3:adjoint_hamiltonian_b}
+    \end{align}
+\end{subequations}
+where $\vect{x}$ is the state system, defined for this system in Equations~\ref{eqn:ch3:patch_model}. The terminal conditions of the adjoint system are defined from the payoff function $\phi(T)$:
+\begin{equation}
+    \vect{\lambda}(T) = \frac{\partial\phi(T)}{\partial\vect{x}}\;.
+\end{equation}
+For this system the payoff function is equal to the objective function $J$, and so all adjoints terminate at zero, apart from $\lambda_{S_V}$ which has a final value of $-1$. This completes the two point boundary value problem, with the state fixed at the initial time, and the adjoint fixed at the final time, allowing us to use the FBSM algorithm introduced in the previous chapter (Algorithm~\ref{alg:ch2:fbsm}). As explained before this solves the state equations forward in time, then the adjoint equations backwards in time, before updating the control function by minimising the Hamiltonian pointwise. This is repeated until the control converges.
 
-Hamiltonian used to derive adjoint dynamics; equations.
+Defining the state and adjoint as follows:
+{\renewcommand{\arraystretch}{1}
+\begin{subequations}\label{eqn:ch3:state_adjoint}
+    \begin{align}
+        \vect{x} &= \begin{pmatrix}S_B & I_B & S_V & I_V\end{pmatrix}^\mathrm{T} \label{eqn:ch3:state_adjoint_a}\\
+        \vect{\lambda} &= \begin{pmatrix}
+            \lambda_{S_B} & \lambda_{I_B} & \lambda_{S_V} & \lambda_{I_V}
+        \end{pmatrix}^\mathrm{T} \label{eqn:ch3:state_adjoint_b}
+    \end{align}
+\end{subequations}
+}
+the Hamiltonian is then given by:
+\begin{subequations}\label{eqn:ch3:hamiltonian}
+    \begin{align}
+    \begin{split}
+    H &= (\lambda_{I_B} - \lambda_{S_B})\left(\mathcal{F}+\beta{}I_B+\beta\epsilon{}I_V\right)S_B - \lambda_{I_B}I_B\left(\mu+f_B\eta\right) \\
+    &{}\quad\quad+(\lambda_{I_V} - \lambda_{S_V})\left(\beta{}I_V+\beta\epsilon{}I_B\right)S_V - \lambda_{I_V}I_V\left(\mu+f_V\eta\right)\label{eqn:ch3:hamiltonian_a}
+    \end{split}\\
+    &= g(\vect{x}, \vect{\lambda}) - \lambda_{I_B}\eta{}I_Bf_B - \lambda_{I_V}\eta{}I_Vf_V\;.\label{eqn:ch3:hamiltonian_b}
+    \end{align}
+\end{subequations}
+In Equation~\ref{eqn:ch3:hamiltonian_b} the function $g(\vect{x}, \vect{\lambda})$ is independent of the control, showing that the Hamiltonian is linear in each control function. In the control update step the control inputs are chosen so as to minimise the Hamiltonian at each time. Since the Hamiltonian is linear in the control this leads to bang-bang control, where control is either maximal or minimal. To take into account the budget constraint, at each time point the Hamiltonian is minimised by solving a linear programming problem, subject to the constraint. This specifies the new control at each time point which is then used in the next iteration of the FBSM algorithm.
 
-Reminder of FBSM algorithm; how is determination of control carried out --- minimise Hamiltonian subject to constraint.
+The adjoint dynamics are derived from this Hamiltonian using Equation~\ref{eqn:ch3:adjoint_hamiltonian_b}. These are found to be:
+\begin{subequations}\label{eqn:ch3:adjoint_dynamics}
+    \begin{align}
+    \dot{\lambda}_{S_B} &= \left(\lambda_{S_B} - \lambda_{I_B}\right)\left(\mathcal{F} + \beta{}I_B+\beta\epsilon{}I_V\right) \label{eqn:ch3:adjoint_dynamics_a} \\
+    \dot{\lambda}_{I_B} &= \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta{}S_B + \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta\epsilon{}S_V + \lambda_{I_B}\left(\mu + f_B\eta\right) \label{eqn:ch3:adjoint_dynamics_b} \\
+    \dot{\lambda}_{S_V} &= \left(\lambda_{S_V} - \lambda_{I_V}\right)\left(\beta{}I_V+\beta\epsilon{}I_B\right) \label{eqn:ch3:adjoint_dynamics_c} \\
+    \dot{\lambda}_{I_V} &= \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta{}S_V + \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta\epsilon{}S_B + \lambda_{I_V}\left(\mu + f_V\eta\right)\;. \label{eqn:ch3:adjoint_dynamics_d}
+    \end{align}
+\end{subequations}
+This completes the necessary equations for using the FBSM algorithm.
 
 \subsubsection{Mixed constraint}
 
-Overview of how mixed state/control constraint could be handled fully; and demonstration that has same effect on equations.
+In the above analysis the budget constraint was only used when minimising the Hamiltonian; the constraint does not feature in the adjoint equations. Mixed state/control constraints such as this one can be difficult to handle in optimal control problems. We here show that by introducing a penalty function for exceeding the maximum budget, the constrained problem reduces to the form given above, provided that the Hamiltonian minimisation is subject to the constraint. The approach taken here is similar to one used in \citet[Chapter 4]{sage_optimum_1968}.
+
+The budget constraint is given by $h$:
+\begin{equation}
+    h(\vect{x}, \vect{f}, t) = f_BI_B + f_VI_V - M \leq 0\;.
+\end{equation}
+Let us define a new state variable $y$ with the following dynamics:
+\begin{subequations}
+    \begin{align}
+    \dot{y} &= h^2H(h)\\
+    y(0) &= 0
+    \end{align}
+\end{subequations}
+where $H(\cdot)$ is the Heaviside step function. This term is zero when the constraint is adhered to, and is positive when there is constraint violation. We then add to the objective function a penalty term based on this state variable:
+\begin{equation}
+    J = \left(N_V(T) - S_V(T)\right)\begingroup\color{ctcoloraccessory} + \frac{1}{2}Sy(T)^2 \endgroup
+\end{equation}
+where $S$ is a positive constant. The minimal value of the second term is zero, corresponding to no constraint violation. Defining a new adjoint variable $\lambda_y$ for $y$, the Hamiltonian is now given by:
+\begin{equation}
+    H = g(\vect{x}, \vect{\lambda}) - \lambda_{I_B}\eta{}I_Bf_B - \lambda_{I_V}\eta{}I_Vf_V \begingroup\color{ctcoloraccessory} + \lambda_yh^2H(h)\endgroup\;.
+\end{equation}
+
+The adjoints for the susceptible classes are unchanged, but the infected class adjoints are affected. These, and the dynamics of $\lambda_y$ are now given by:
+\begin{subequations}\label{eqn:ch3:mixed_adjoint_dynamics}
+    \begin{align}
+    \dot{\lambda}_y &= 0 \\
+    \dot{\lambda_{I_B}} &= \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta{}S_B + \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta\epsilon{}S_V + \lambda_{I_B}\left(\mu + f_B\eta\right) \begingroup\color{ctcoloraccessory} - 2\lambda_yhH(h)f_B \endgroup \\
+    \dot{\lambda}_{I_V} &= \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta{}S_V + \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta\epsilon{}S_B + \lambda_{I_V}\left(\mu + f_V\eta\right) \begingroup\color{ctcoloraccessory} - 2\lambda_yhH(h)f_V \endgroup\;.
+    \end{align}
+\end{subequations}
+Whilst this system could be solved without imposing the constraint when minimising the Hamiltonian, all the red terms in the above equations are zero when controls are chosen that adhere to the budget constraint. This means that when imposing this constraint on Hamiltonian minimisation, the adjoint equations previously used, without considering the constraint, are correct. The simpler solution is therefore used to find the optimal control satisyfing the constraint.
 
 \subsection{Direct formulation}
 
-Description of BOCOP: inputs and algorithm/optimiser used.
+The setup for the direct formulation is considerably simpler than for the indirect case, since no derivation of the Hamiltonian or adjoint system is required. The handling of constraints is also much simpler. We use the BOCOP package to generate and solve the NLP problem \citep{bocop}. The state dynamics (Equations~\ref{eqn:ch3:patch_model}) are coded in \CC, and the package discretises the system using a fourth order Runge-Kutta method (direct transcription approach, as described in the previous chapter). The NLP problem is solved using the software Ipopt \citep{wachter_implementation_2006}, which implements an interior point optimisation method.
 
 \section{Results}
 
@@ -69,6 +166,8 @@ Application to stochastic version of model.
 \section{Discussion}
 
 Advantage of optimal control $\rightarrow$ finds less intuitive controls. But benefit of switching has to be balanced with addition costs of performing the switch.
+
+Connection to strategies found in other studies, e.g.\ \citet{ndeffo_mbah_resource_2011}.
 
 General control strategies $\rightarrow$ bang-bang switching controls. Effect of getting switch time wrong, limited by simplicity of model.
 

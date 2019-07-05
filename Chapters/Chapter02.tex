@@ -97,13 +97,13 @@ The direct formulation differs from the indirect in that it does not rely on the
 
 Whilst it may seem excessive to be directly optimising all the state variables, since each variable only directly influences variable that are close in time the problem becomes large but sparse. This sparsity can be exploited by numerical optimisation routines, and is often simpler to solve than a small, dense problem in which the state is not discretised and optimised \citep{betts_practical_2010}. The state dynamics constraints are constructed as a discretisation of the state ODE system, often using an implicit Runge-Kutta scheme. For example, following the standard approach in \citet{betts_practical_2010}, if the state-control system is discretised on $M$ grid points, the NLP variables are given by:
 \begin{equation}
-    \bm{y}^\mathrm{T} = \left(\bm{x}_1, \bm{u}_1, \ldots \bm{x}_M, \bm{u}_M\right)\;.
+    \vect{y}^\mathrm{T} = \left(\vect{x}_1, \vect{u}_1, \ldots \vect{x}_M, \vect{u}_M\right)\;.
 \end{equation}
-Using an Euler discretisation scheme, the state ODEs ($\dot{\bm{x}} = \bm{f}(\bm{x}, \bm{u}, t)$) can be approximated by the following NLP constraints:
+Using an Euler discretisation scheme, the state ODEs ($\dot{\vect{x}} = \vect{f}(\vect{x}, \vect{u}, t)$) can be approximated by the following NLP constraints:
 \begin{equation}
-    \bm{0} = \bm{x}_{k+1} - \bm{x}_k - \frac{h_k}{2}\left(\bm{f}_{k+1} + \bm{f}_k\right) \equiv \bm{c}(\bm{y})
+    \vect{0} = \vect{x}_{k+1} - \vect{x}_k - \frac{h_k}{2}\left(\vect{f}_{k+1} + \vect{f}_k\right) \equiv \vect{c}(\vect{y})
 \end{equation}
-The NLP variables $\bm{y}$ are then optimised subject to these constraints using an NLP solver.
+The NLP variables $\vect{y}$ are then optimised subject to these constraints using an NLP solver.
 
 The advantages of the direct over the indirect formulation are in its flexibility and robustness. Since the Hamiltonian and adjoint are not required, and gradients can be estimated using finite differences, the method can be used for any system without analytic derivatives. Furthermore, there is extensive literature and software available for solving large, sparse NLP problems. This means the optimisations can be fast, efficient and robust. Whilst the method does still require an initial guess for both the control and the state variables, the NLP problem has a much larger region of convergence than the root finding in indirect methods \citep{betts_practical_2010}.
 
