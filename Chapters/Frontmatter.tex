@@ -23,6 +23,7 @@
 \end{lrbox}
 
 
+% Title page
 \thispagestyle{empty}
 \begin{center}
     \centering
@@ -53,8 +54,9 @@
 \pagestyle{plain}				% display just page numbers
 
 % Declaration
-\pdfbookmark[0]{Declaration}{Declaration}
+% \pdfbookmark[0]{Declaration}{Declaration}
 \chapter*{Declaration}
+\addtocontents{toc}{\protect\vspace*{-10pt}}
 \addcontentsline{toc}{chapter}{Declaration}
 \label{sec:declaration}
 \vspace*{-10mm}
@@ -80,8 +82,9 @@ Elliott Bussell
 \cleardoublepage
 
 % Acknowledgements
-\pdfbookmark[0]{Acknowledgements}{Acknowledgements}
+% \pdfbookmark[0]{Acknowledgements}{Acknowledgements}
 \chapter*{Acknowledgements}
+\addtocontents{toc}{\protect\vspace*{-10pt}}
 \addcontentsline{toc}{chapter}{Acknowledgements}
 \label{sec:acknowledgements}
 \vspace*{-10mm}
@@ -91,8 +94,9 @@ Elliott Bussell
 \cleardoublepage
 
 % Abstract
-\pdfbookmark[0]{Abstract}{Abstract}
+% \pdfbookmark[0]{Abstract}{Abstract}
 \chapter*{Abstract}
+\addtocontents{toc}{\protect\vspace*{-10pt}}
 \addcontentsline{toc}{chapter}{Abstract}
 \label{sec:abstract}
 \vspace*{-10mm}
@@ -102,11 +106,14 @@ Elliott Bussell
 \cleardoublepage
 
 \setcounter{tocdepth}{2}		% define depth of toc
+\addtocontents{toc}{\protect\vspace*{-10pt}}
 \tableofcontents				% display table of contents
 \cleardoublepage
 
+\addtocontents{toc}{\protect\vspace*{-10pt}}
 \listoffigures
 \cleardoublepage
 
+\addtocontents{toc}{\protect\vspace*{-10pt}}
 \listoftables
 \cleardoublepage
