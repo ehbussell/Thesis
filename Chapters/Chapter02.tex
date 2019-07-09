@@ -8,7 +8,7 @@ This chapter is about...
 
 \section{Background}\label{sec:ch2:background}
 
-Optimal control theory (OCT) is the field of mathematics concerned with finding time-varying inputs to dynamic systems, optimised to maximise some performance metric. The dynamical system could be a system of ODEs, PDEs, or discrete difference equations, controlled by an input variable, or combination of variables, that can be varied from outside the system. The field developed as an extension to the calculus of variations, with roots also in classical control theory, random processes, and linear and nonlinear programming \citep{bryson_optimal_1996}. In the 1950s, Bellman developed dynamic programming, a method for finding optimal controls by recursively solving smaller problems \citep{bellman_dynamic_2013}. These methods struggle to solve realistic problems because of the `curse of dimensionality', where as the number of state and control variables increases, the memory required to solve the recursive problem becomes impractical.
+Optimal control theory (OCT) is the field of mathematics concerned with finding time-varying inputs to dynamic systems, optimised to maximise some performance metric. The dynamical system could be a system of ODEs, PDEs, or discrete difference equations, controlled by an input variable, or combination of variables, that can be varied from outside the system. The field developed as an extension to the calculus of variations, with roots also in classical control theory, random processes, and linear and nonlinear programming \citep{bryson_optimal_1996}. In the 1950s, Bellman developed dynamic programming, a method for finding optimal controls by recursively solving smaller problems \citep{bellman_dynamic_1957}. These methods struggle to solve realistic problems because of the `curse of dimensionality', where as the number of state and control variables increases, the memory required to solve the recursive problem becomes impractical.
 
 Later work by \citet{pontryagin_mathematical_1962} extended work from calculus of variations to find a necessary condition for the maximising path. This method explores extremal paths individually and so avoids dimensionality issues. This condition is contained in Pontryagin's famous `maximum principle', the main theory underlying much of OCT. We will now summarise this principle but we do not describe the mathematics here. Further details can be found in \citet{lenhart_optimal_2007}. The principle relates to a differential equation system for a state $x$, described as follows:
 \begin{equation}
@@ -32,7 +32,7 @@ The maximum principle states that if $u^*(t)$ and $x^*(t)$ are optimal for this 
     H(t, x^*(t), u(t), \lambda(t)) \leq H(t, x^*(t), u^*(t), \lambda(t))
 \end{equation}
 for all time $t \in \left[0, T\right]$. The Hamiltonian $H$ is given by:
-\begin{equation}
+\begin{equation}\label{eqn:ch2:hamiltonian_general}
     H(t, x(t), u(t), \lambda(t)) = L(x(t), u(t), t) + \lambda(t)f(x(t), u(t), t)
 \end{equation}
 and the adjoint system satisfies:
@@ -46,17 +46,17 @@ The terminal constraint in the adjoint system is known as the transversality con
 
 \section{OCT within epidemiology}\label{sec:ch2:oct_in_epidem}
 
-General use in OCT - dynamic models of complex systems with clear goal for interventions.
+When deciding how to manage human, animal or plant epidemics, public health or environmental officials must take into account economic constraints. OCT optimises control strategies whilst ensuring adherence to constraints and minimisation of total costs, and is therefore a useful tool for designing epidemic interventions. Within epidemiology, successful disease control relies on applying the most effective control methods at the correct time, and at a sufficient level \citationneeded. OCT is an effective tool for balancing disease management objectives with economic and logistic constraints, provided the overall goal of the management program is well defined. OCT has been applied to models of many diseases, including HIV \citationneeded, foot and mouth disease \citationneeded, and sudden oak death \citationneeded. In this section we will review how OCT has developed within the field of epidemiology, discussing outstanding limitations and problems.
 
 \subsubsection{Early work \& general principles}
 
-Sethi original work. Simple models. Bang-bang control. Switching control here or next para?
+Early work using OCT on epidemiological models was carried out by \citet{sethi_optimal_1978}, who optimised levels of vaccination and treatment in simple SEIR type models. The work is analytic and finds cases where the control can be classified as `bang-bang'. Bang-bang controls occur when the Hamiltonian (Equation~\ref{eqn:ch2:hamiltonian_general}) is linear in the control functions. The optimal control then switches between its maximum and minimum values giving so-called bang-bang strategies, where each control is either on or off. These strategies have arisen repeatedly in disease control, for example by \citet{forster_optimizing_2007} for a plant disease spreading through an agricultural landscape, and \citet{panetta_optimal_2003} for cancer drug treatments.
 
-More complex and general case \citep{behncke_optimal_2000}. Still see bang-bang controls, concept of `front-loading'.
+As OCT was increasingly used within epidemiology, the underlying models increased in complexity. \citet{behncke_optimal_2000} developed more complex models of control methods, including vaccination, quarantine and screening, and health-promotion campaigns. The interventions modelled are more realistic than those used in previous studies,but the models are analytic and abstract in nature. The models are not specific to the form of the force of infection, so that the results are valid in the general case. The control strategies found here introduce the concept of `front-loading', where additional resources are allocated early in the epidemic when control can be more effective. The importance of this early timing of control for successful management has also been shown for control of sudden oak death \citep{cunniffe_modelling_2016}.
 
 \subsubsection{Bioeconomics}
 
-History and nature of optimisation - closely relate to economics literature. Importance of economics in epidemiology. Use of OCT to find cost-effective strategies.
+Throughout its history, OCT has been closely connected with the field of economics \citep{weber_optimal_2011}, for example in fisheries economics \citep{clark_economics_1975}. Consideration of economics is important for optimising epidemiological controls \citep{perrings_merging_2014}, since interventions must be cost-effective, and resources are often limited. In one example, OCT has been used to find cost-effective human papillomavirus vaccination strategies \citep{brown_role_2011}, showing how time-dependent strategies can be found that balance the costs of administering vaccines with the costs of treating infected individuals. In plant epidemiology, a recent study shows how control strategies for vector transmitted diseases can balance multiple economic costs \citep{bokil_optimal_2019}, including control costs, yield loss and long term costs from insecticide use.
 
 To define what cost-effective means - need clearly defined and quantified objective. Importance of choosing objective in epidemiology, and effect on balancing of controls.
 
