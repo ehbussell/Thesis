@@ -1,0 +1,325 @@
+% !TEX root = ../thesis.tex
+%
+\chapter{Optimising stand level disease control to protect tanoak\label{ch:protect_tanoak_control}}
+
+\section{Introduction\label{sec:ch6:intro}}
+
+\todo{More here.}
+
+Using our optimal control frameworks we will explore what control methods are most effective, and how deployment should vary over time. Most importantly, we will look at the effects of parameter and observational uncertainty on control efficacy, testing under what conditions MPC outperforms open-loop\footnote{All code for this chapter is available at \url{https://github.com/ehbussell/MixedStand} (\todo{Currently private})}.
+
+\section{Stand level disease control\label{sec:ch6:control}}
+
+In the previous section we implemented the Cobb model with realistic spatial dispersal properties, and reparameterised to ensure the invasion timescales were still realistic. We now have a simulation model representative of SOD spread within a mixed species forest stand. Next, we set up the methodology for implementing and optimising control in this model, so that we can address the key questions in this chapter about strategies for protecting tanoak. As in the previous chapter, we will require an approximate model to optimise control, since the simulation model is too complex. We will then use the open-loop and MPC frameworks we previously developed to integrate control strategies into the simulation model, and demonstrate the importance of continued surveillance for effective control. To begin with though, it is necessary to quantify the effectiveness of a given strategy by defining the purpose of control in this system.
+
+\subsection{Management objectives}\label{sec:ch6:mgmt_objs}
+
+As described in Section~\ref{sec:ch5:Intro}, it is important to retain tanoak in the forest stand due to its high cultural and ecological value. We therefore investigate strategies for specifically protecting tanoak, aiming to maintain a population of healthy overstorey tanoak trees in the stand over the medium- to long-term. Following the timescales in \citet{cobb_ecosystem_2012} we look at preventing decline of tanoak over a time horizon ($T$) of 100~years. Since the focus of the control is to ensure tanoak still exists in the future, we treat this as a terminal objective function. By this we mean that the goal is to maximise the number of healthy overstorey tanoak trees at the end of the time horizon, i.e.\ after 100~years rather than integrated over that time period.
+
+This objective does not capture everything that is important to maintaining a healthy forest however. A control strategy that protects overstorey tanoak to the detriment of all other trees is clearly suboptimal, and this should be accounted for in the objective function. The diversity of trees in the forest is important for wildlife habitats and food sources, recreational uses and ecological services \citep{swiecki_reference_2013}. More broadly, maintaining diversity ensures that important ecosystem services are provided \citep{cadotte_beyond_2011, gamfeldt_higher_2013}. Beyond this, diverse forests are more resilient to other disease threats \citep{keesing_impacts_2010}; there is little point to a control strategy that protects tanoak from SOD but makes the forest vulnerable to attack from another pathogen. The objective function must therefore capture a balance between protection of tanoak, and continued host diversity for provision of ecosystem services.
+
+There are many possible measures of diversity that could be used as part of the management objective. One measure that is very popular in the ecological literature is the Shannon index \citep[][pp.\ 106--108]{magurran_measuring_2013}. The Shannon index originates in information theory, based on the idea that diversity is a measure of the expected information content in an observation of a random individual's species. The Shannon index is calculated using this equation:
+\begin{equation}\label{eqn:ch6:shannon_idx}
+    H' = -\sum_ip_i\ln{p_i}
+\end{equation}
+where $p_i$ is the proportion of individuals in species $i$. It measures both species richness and species evenness, so is suited to our application in which the number of different species and evenness across species are both important. The Shannon index can be transformed into a value with more biological meaning: the effective number of species (ENS). This measures how many equally common species would be required to achieve the same level of diversity and for the Shannon index $H'$ is given by:
+\begin{equation}\label{eqn:ch6:shannon_ens}
+    \textrm{ENS} = \exp(H')\;.
+\end{equation}
+
+We seek a control scheme that maintains ecosystem services, so it is important that diversity is maintained throughout the simulation time. This ensures that further diversity is not lost during this time in wildlife and other plant life. We therefore choose this to be an integrated metric, integrated over the full time horizon. Overall then, our management objective is made up of a terminal term corresponding to preserving healthy large tanoak, and an integrated term to maintain maximum diversity across all times. The mathematical form of the objective is given by:
+\begin{equation}\label{eqn:ch6:mgmt_obj}
+    J = \gamma_1\left(S_{1,3}(T) + S_{1,4}(T)\right) - \gamma_2\left(\int_{t=0}^T \sum_ip_i\ln{p_i}\,\mathop{dt}\right)
+\end{equation}
+where $\gamma_1$ and $\gamma_2$ are the weights associated with the tanoak retention, and diversity conservation objectives respectively. There is an arbitrary choice in the balance between these two terms, which must be chosen by a policy maker or forest manager. In our case we set $\gamma_1$ such that in the disease free case, the first term equals 1. We set $\gamma_2$ such that, in the disease free case again, the second term equals 0.25. Whilst this is an arbitrary choice, we scan over the relative diversity benefit ($\gamma_2$) later in Section~\ref{sec:ch6:div_scan}.
+
+\subsection{Control methods}
+
+Many different methods are recommended for controlling the spread of \textit{P.~ramorum} \citep{swiecki_reference_2013}. However, the methods can be grouped into three main classes: roguing, thinning and protecting. Roguing methods are based on finding and removing infected hosts whereas thinning methods remove hosts regardless of infection status. Removal of hosts, through thinning and/or roguing, is the only control that has been effective at the landscape scale \citep{hansen_epidemiology_2008}. Management recommendations made by the U.S.\ Forest Service, highlight removal of the spreader species bay as very important for effective control \citep{swiecki_reference_2013}, but also recommend removal of infected hosts.
+
+Whilst at the landscape scale host removal is the only effective method, at the smaller scales of a single forest stand protection methods could also be useful. These methods apply chemicals to uninfected trees to reduce their susceptibility to the disease. For SOD the main protectants used are phosphonates, that are approved for use on oak and tanoak species. The treatment only works as a preventative measure but it is recommended for protecting individual hosts \citep{lee_protecting_2010}. Reports of the effectiveness of phosphonate treatment vary, but most studies suggest it does slow infection \citep{swiecki_reference_2013}. Application by bark-spray or trunk injection is reported to be effective for up to around two years \citep{garbelotto_phosphonate_2009}, but evidence is lacking for the impact on host susceptibility. There are also conflicting reports about its efficacy, with some studies finding little effect of treatment \citep{kanaskie_application_2011}. Here we will assume a mild effect of \SI{25}{\percent} reduction in susceptibility.
+
+Roguing controls can be applied separately to infected small tanoak, large tanoak and bay laurel. The hosts are removed and do not resprout, consistent with application of a herbicide to the stump as is often recommended \citep{swiecki_reference_2013}. Thinning also removes hosts, but trees of all infection status and applied separately to small tanoak, large tanoak, bay and redwood. Table~\ref{tab:ch6:control_methods} summarises the control methods and their effects. Protection can only be applied to small and large tanoaks, and only to susceptible hosts. These hosts are moved into new protected class with the same demographic dynamics (i.e.\ there is a protected class $P_{1,i}$ for each age class $i$ of tanoak). The protected classes have reduced susceptibility (by \SI{25}{\percent}) but return to the susceptible class at a rate of \SI{0.5}{\per\year}. This corresponds to an average time of \SI{2}{\years} before protection wanes.
+
+\begin{table}[h]
+    \centering
+    \caption{Possible control methods implemented in the stand level model. There are three main groups of control: roguing, thinning and protecting, and these can be targeted at different host groups. Approximate costs of each control are taken from \citet{kovacs_predicting_2011}, but roguing costs are increased to account for additional costs of identification and removal of unstable SOD affected trees.\label{tab:ch6:control_methods}}
+    \begin{tabular}{@{}llcc@{}}
+        \toprule
+        \textbf{Control} & \textbf{State changes} & \textbf{Rate} $\eta_I$ / \si{\per\year} & \textbf{Cost} $c_i$ / a.u.\\
+        \midrule
+        Rogue small tanoak & $I_{1, 1\text{--}2} \rightarrow \emptyset$ & 0.25 & 3000\\
+        Rogue large tanoak & $I_{1, 3\text{--}4} \rightarrow \emptyset$ & 0.25 & 6000\\
+        Rogue bay & $I_{2} \rightarrow \emptyset$ & 0.25 & 6000\\
+        \midrule
+        Thin small tanoak & $\{S, I, P\}_{1, 1\text{--}2} \rightarrow \emptyset$ & 1.0 & 250\\
+        Thin large tanoak & $\{S, I, P\}_{1, 3\text{--}4} \rightarrow \emptyset$ & 1.0 & 500\\
+        Thin bay & $\{S, I\}_{2} \rightarrow \emptyset$ & 1.0 & 500\\
+        Thin redwood & $S_{3} \rightarrow \emptyset$ & 1.0 & 500\\
+        \midrule
+        Protect small tanoak & $S_{1, 1\text{--}2} \rightarrow P_{1, 1\text{--}2}$ & 0.25 & 200\\
+        Protect large tanoak & $S_{1, 3\text{--}4} \rightarrow P_{1, 3\text{--}4}$ & 0.25 & 200\\
+        \bottomrule
+    \end{tabular}
+    \end{table}
+
+\subsubsection{Budget constraint}
+
+For each of the 9 controls in Table~\ref{tab:ch6:control_methods}, we seek to find a time-varying control parameter $f_i(t)$ between zero and one, indicating the level of control $i$, that minimises the management objective function. To model economic and logistic constraints we limit the total expenditure per unit time, where this is the product of the number of hosts controlled and the cost of that control method. The mathematical form of this constraint is given by:
+\begin{equation}
+    \sum_i \left(f_i\eta_iX_i\right)c_i \leq B
+\end{equation}
+where $X_i$ is the stem density of the controlled hosts. For example, for roguing of small tanoak $X_i$ would be $\left(I_{1,1} + I_{1,2}\right)$. The term in brackets is therefore the rate of removal of hosts for each control. The cost of each control is given by $c_i$ and the maximum budget is given by $B$.
+
+\subsection{Approximate model}
+
+Optimisation of the chosen management objective using all nine time-dependent controls is computationally infeasible using the full spatial model. To allow progress we use an approximate model and lift control results from this simpler optimisation back to the simulation model, using the methods described in the previous chapter. Here we choose to make the approximate model non-spatial, so as to significantly reduce the state-space for optimisation. Further approximations could be possible, for example grouping together the age classes within the small and large tanoak groups. To ensure that we can lift demographic parameters directly from the simulation model however, we only change the spatial structure of the model. The approximate model therefore assumes that all hosts in the forest stand are well-mixed.
+
+As all other features of the model are retained, the form of the equations is very similar to that of the simulation model (equations~\ref{eqn:ch5:cobb_model_1}) so we will not repeat them here. The only difference is that in the approximate model the dependence on cell ($x$) of the states and empty space ($E$) has been dropped. The form of the force of infection terms is simpler however, since infection no longer spreads between cells. The infection rates in the non-spatial approximate model cannot be lifted from the simulation model, since the approximate model now assumes infection comes from all infected hosts in the stand rather than just those in the immediate spatial vicinity. The force of infection terms in the approximate model are therefore:
+\begin{subequations}\label{eqn:ch6:infection_approx}
+        \begin{align}
+            \tilde{\Lambda}_{1,i} &= \tilde{\beta}_{1,i}\sum_{j=1}^4I_{1,j} + \tilde{\beta}_{12}I_{2} \\
+            \tilde{\Lambda}_{2} &= \tilde{\beta}_{21}\sum_{j=1}^4I_{1,j} + \tilde{\beta}_{2}I_{2}
+        \end{align}
+\end{subequations}
+where $\tilde{\beta}$ indicate infection parameters that need to be fitted to the simulation model.
+
+\subsubsection{Fitting infection rates}
+
+The seven infection rates $\tilde{\beta}$ are the only parameters that must be fitted to the simulation model. The approximate model cannot capture the heterogeneous mixing present in the simulation model, however, the approximated dynamics may be accurate enough to give effective control strategies when optimised. We use the method of least squares to match the simulation and approximate models since both models are deterministic. To fit the parameters, the simulation model is used to run a single trajectory with no control interventions. The disease progress curves of this simulation run are then used as the baseline for fitting the approximate model. For a trial set of $\tilde{\beta}$ parameters and an approximate model trajectory, we calculate the sum of squares as the sum of squared deviations between the simulation and approximate disease progress curves for each age class of tanoak, and for bay, at time points throughout the trajectory. The $\tilde{\beta}$ parameters are then optimised by minimising this total summed squared error (SSE). For a set of time points $t_i$, and where approximate model states are signified with a tilde, the equation for SSE is given by:
+\begin{equation}
+    \mathrm{SSE} = \sum_{i}\left[\sum_{j=1}^4\left(I_{1,j}(t_i) - \tilde{I}_{1,j}(t_i)\right)^2 + \left(I_{2}(t_i) - \tilde{I}_{2}(t_i)\right)^2\right]
+\end{equation}
+where the dependence on cell in the simulation terms has been dropped to indicate an average over all cells in the landscape, for example:
+\begin{equation}
+    I_{1,j}(t) = \frac{\sum_xI_{1,j,x}(t)}{N_\textrm{cells}}\;.
+\end{equation}
+
+In the simulation model, infectious pressure is dominated by sporulation from bay laurel. This makes estimation of all `within-tanoak' infection rates ($\beta_{1,i}$) difficult as from the simulation data they are individually unidentifiable. We therefore use a two stage fitting process. For the first stage, all infection rates in the simulation model related to bay ($\beta_2$, $\beta_{12}$, and $\beta_{21}$) are set to zero. This makes bay epidemiologically inactive, but maintains the same demographic dynamics. The simulation model is run using these parameters, and the SSE is minimised to find the within tanoak-infection rates.
+
+In the second fitting stage all infection rates are fitted, with bay epidemiologically active again. The within-tanoak rates relative to $\beta_{1,1}$ from the first stage are used as a constraint to ensure the identifiability of these rates. This means a single within-tanoak rate is fitted in stage 2, with all other within-tanoak rates fixed relative to this using the results from stage 1. This stage also fits the bay infection rate, and the cross-species infection rates.
+
+As can be seen in Figure~\ref{fig:ch6:approx_fit}, despite lacking any spatial component, the approximate model can very closely capture the uncontrolled dynamics of the simulation model. However, the approximate model should also fit as accurately as possible when control strategies are introduced. In Figure~\ref{fig:ch6:fit_under_control}, the fit of the approximate model is tested under constant control strategies using fixed control rates. It is clear that roguing at the same rate is more effective in the approximate model. This is because of the difference in mixing between the approximate and simulation models. The effect is small for thinning and protecting, but the same level of roguing in the approximate and simulation models gives very different dynamics.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Approx_fit}
+        \caption[Fitting of approximate model]{Fitting of the approximate model to match the output of the simulation model. \textbf{(a)} shows the overall stem density for each species class, with the dashed line showing the fitted approximate model. The fit is carried out by matching the disease progress curves as shown in \textbf{(b)}\label{fig:ch6:approx_fit}.}
+    \end{center}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{Graphics/ch6/Control_fit_test}}
+        \caption[Testing of approximate model under control]{Testing of approximate model under constant control strategies. The rows from top to bottom show dynamics under constant roguing, thinning, and protecting strategies. The left plots show overall host dynamics, and the right plots show the infected host dynamics. The roguing and protecting strategies control at the maximum rates from Table~\ref{tab:ch6:control_methods}, whereas the thinning strategy controls at \SI{10}{\percent} of the maximum rate. The approximate model fits well under constant thinning and protecting strategies, but less well under a constant roguing strategy.\label{fig:ch6:fit_under_control}}
+    \end{center}
+\end{figure}
+
+\subsubsection{Empirical parameterisation of control}\label{sec:ch6:control_scaling}
+
+Roguing is less effective in the simulation model because of an imposed spatial structure in the non-spatial control strategy. Roguing in the simulation model removes infected hosts from the core and edge of the spreading epidemic. Removal of hosts from the core has little effect on the rate of epidemic spread, since they are not near the wavefront. In the non-spatial model however, all hosts are well-mixed, so removal of infected hosts has a larger effect.
+
+As a simple correction for this difference in roguing effectiveness, we investigate a simple scaling of the roguing rate in the approximate model. To test the plausibility of a single scaling rate for all approximate roguing controls, both models are run with constant roguing strategies. Roguing of small tanoak, large tanoak and bay are all set to occur at the same rate for the whole simulation, and this rate is varied between simulations. In the approximate model, the control rate is scaled by a single parameter which is also varied, and we analyse the difference in the final number of healthy large tanoak after \SI{100}{\years} between the simulation and approximation (Figure~\ref{fig:ch6:control_scaling}). To minimise the deviation across a range of control rates, the value of the scaling parameter is optimised. We optimise the deviation in the number of large healthy tanoak, since this is the primary objective of the control and must therefore be captured as accurately as possible. The optimisation minimised the sum of squared errors (SSE) over the range of control rates.
+
+The results in Figure~\ref{fig:ch6:control_scaling} show that a single scaling factor can largely eliminate the deviation under constant roguing strategies. We do not expect this scaling to ensure that the approximate model is always closely aligned to the simulation model, particularly once control strategies are time-varying. The approximate model simply cannot capture the heterogeneities in host mixing. This scaling does however go some way to ensuring that control strategies from the approximate model perform well on the simulation model.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Control_scaling}
+        \caption[Scaling of control rates]{Empirical scaling of approximate model control rates to match simulation output. \textbf{(a)} shows the difference in the final number of large healthy tanoak as a function of the constant roguing rate, for a number of control rate scaling factors. The optimal value minimises the sum of squared errors (SSE) over all rates, as shown in \textbf{(b)}. \textbf{(c)} and \textbf{(d)} show the dynamics with the newly scaled approximate control rates, under a constant roguing strategy. The approximate model now fits the overall host dynamics well, but to do this slightly overestimates the level of infection.\label{fig:ch6:control_scaling}}
+    \end{center}
+\end{figure}
+
+\subsection{Control frameworks and lifting}\label{sec:ch6:lifting}
+
+In Chapter~\ref{ch:complex_models} we introduced the open-loop and MPC control frameworks. These same frameworks are tested here. To aid convergence, the controls inputs $f_i$ are constrained in the optimisation to be fixed over \SI{5}{\year} intervals. The main difference from Chapter~\ref{ch:complex_models} in applying the control frameworks is how controls are lifted from the approximate model to the simulation model. The budget constraint is a mixed constraint that couples the control inputs ($f_i$) with the state of the system ($X_i$). When the control inputs are lifted to the simulation model, there is no guarantee of the states being exactly the same, and so the expenditure by the control will not be the same. This can mean that direct lifting of the control inputs will lead to the budget being exceeded. When the budget is exceeded, the control inputs are multiplied by a factor to reduce the overall expenditure to meet the budget constraint. This avoids imposing a priority amongst control methods which would have to be chosen arbitrarily. In mathematical terms, the control inputs from the approximate model depend on the state in the simulation ($X_i$) in the following way:
+\begin{equation}
+    f_i = f_i\frac{B}{\sum_j\left(f_j\eta_jX_jc_j\right)}\;.
+\end{equation}
+This is only the case when the budget is exceeded, otherwise the control inputs $f_i$ are used directly. We do not correct for under-allocation of resources, i.e.\ control inputs not spending the entire budget, since this could lead to extra control not accounted for in the approximate model. In practice correcting for this would lead to extra resources allocated to thinning, and hence removal of more healthy trees than is necessary.
+
+\FloatBarrier
+\section{Results\label{sec:ch6:results}}
+
+\subsection{Optimal strategies}
+
+We first show the optimal strategies found using OCT on the approximate model. The strategies are lifted to the simulation model using the methods described above for both open-loop and MPC frameworks.
+
+\subsubsection{Open-loop strategies}\label{sec:ch6:open_loop}
+
+The open-loop framework carries out control optimisation on the approximate model, and this strategy is then lifted to the simulation for the full duration of the epidemic. The strategy found using OCT when applied to the simulation is shown in Figure~\ref{fig:ch6:ol_strat}(a). The strategy focusses on thinning of bay, followed by thinning of redwood, early in the epidemic. Roguing is carried out throughout the epidemic but at a rate which increases towards the end. This is because late in the simulation infection re-emerges, so roguing uses more of the budget than anticipated by the approximate model. There are more infected hosts in the simulation, so it costs more to remove them. This can also be seen in Figure~\ref{fig:ch6:ol_strat}(b), where towards the end of the epidemic in the simulation, there is a decline in the tanoak numbers. This is not captured by the approximate model that anticipates tanoak numbers continuing to increase.
+
+\begin{figure}[!t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/OL_control}
+        \caption[Open-loop control strategy]{Optimal allocation of control resources using the approximate model. \textbf{(a)} shows the allocation over time to each control method, with thinning only during the first \SI{30}{\years{}}. Control proportions ($f$) are fixed over \SI{5}{\year} intervals. Greyed out control methods in the legend are not used. In \textbf{(b)} the corresponding host dynamics are shown for both the simulation and approximate model. The approximation degrades towards the end of the epidemic, leading to unanticipated tanoak decline in the simulation.\label{fig:ch6:ol_strat}}
+    \end{center}
+\end{figure}
+
+The open-loop strategy carries out a large amount of thinning early in the epidemic. As can be seen in Figure~\ref{fig:ch6:ol_div_tan}(a), this severely impacts the stand diversity. Over the course of the epidemic though, the diversity in the simulation returns to close to its initial value. In the approximate model diversity is not expected to recover as much. This reduction in diversity is balanced though, by the retention of tanoak in the stand. As shown in Figure~\ref{fig:ch6:ol_div_tan}(b), the approximate model expects the control strategy to restore the full tanoak population, and increase it above its initial value. It is able to do this in the approximate model as disease is eliminated early, and healthy tanoak can grow into the space made available by the thinning of bay and redwood. This does not happen in the simulation model though, where the late re-emergence results in rapid decline of large healthy tanoak over the final \SI{20}{\years}. Despite this, the open-loop strategy shows a significant improvement over the dynamics under no control intervention. The strategy slows the spread of disease, keeping tanoak in the forest population for an additional \SI{80}{\years}.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/OL_control2}
+        \caption[Open-loop strategy diversity and tanoak decline]{Impact on diversity and tanoak decline of the open-loop framework. The control allocation used is as shown in Figure~\ref{fig:ch6:ol_strat}. \textbf{(a)} shows the impact on the diversity in the forest stand over the course of the epidemic. The diversity is shown as an effective number of species (ENS, as defined in Equation~\ref{eqn:ch6:shannon_ens}). The initial thinning of bay and redwood results in diversity decline, but it improves over the rest of the epidemic. \textbf{(b)} shows the change in numbers of large and healthy tanoak stems. Importantly, whilst the open-loop strategy shows a significant improvement over no control, the numbers are very different from those predicted by the approximate model.\label{fig:ch6:ol_div_tan}}
+    \end{center}
+\end{figure}
+
+\subsubsection{MPC strategies}
+
+In the MPC framework the approximate and simulation models are run concurrently, with the approximate model reset to match the simulation and re-optimised at regular update steps. These updated controls are then lifted to the simulation model going forward until the next update time. We first test the MPC framework with updates every \SI{20}{\years}. For the first \SI{20}{\years} the control is exactly the same as the open-loop strategy (Figure~\ref{fig:ch6:mpc_strat}), since it is lifted from the same optimisation. After this, though, updates result in increased levels of thinning. In particular, after the updates at 60 and \SI{80}{\years} there is significant thinning of bay. This is to stem increased infection in bay, and keep the late disease re-emergence under control. As can be seen in Figure~\ref{fig:ch6:mpc_strat}(b), the updates ensure the approximate model dynamics more closely match the simulation, compared to under open-loop control. The extra thinning of bay slows the disease re-emergence and there is less decline in tanoak numbers.
+
+\begin{figure}[!t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/MPC_control}
+        \caption[MPC control strategy]{Optimal allocation of control resources using the MPC framework. \textbf{(a)} shows the allocation over time to each control method, with black vertical lines showing the update times. Thinning occurs during the first \SI{30}{\years}, but additional thinning of bay is carried out after later updates. Greyed out control methods in the legend are not used. In \textbf{(b)} the corresponding host dynamics are shown for both the simulation and approximate model. The approximation is kept closer to the simulation trajectory, allowing more informed control decisions.\label{fig:ch6:mpc_strat}}
+    \end{center}
+\end{figure}
+
+Figure~\ref{fig:ch6:mpc_performance}(a) shows the dynamics of large healthy tanoak under the MPC framework. Although the approximate model incorrectly still expects tanoak numbers to increase after each update, keeping the model close to the simulation dynamics improves control. The MPC framework retains approximately \SI{60}{\percent} of the original tanoak population after \SI{100}{\years}. Open-loop only retains \SI{15}{\percent}. Figure~\ref{fig:ch6:mpc_performance}(b) compares the objective function values for open-loop, MPC, no control, and without any disease. We can see that MPC lowers diversity performance slightly compared to open-loop, but in doing this retains significantly more tanoak.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/MPC_control2}
+        \caption[MPC strategy performance]{Performance comparison between open-loop and MPC frameworks. \textbf{(a)} shows the change in large and healthy tanoak numbers, here retaining around \SI{60}{\percent} of the original numbers compared with \SI{15}{\percent} using the open-loop framework. \textbf{(b)} compares the objective values of the control frameworks, splitting the objective into tanoak and diversity components. MPC balances a reduction in diversity compared to open-loop, with a significant improvement in tanoak retenetion.\label{fig:ch6:mpc_performance}}
+    \end{center}
+\end{figure}
+
+Since the updates in MPC improve control, an important question is how often to update the approximate model. Figure~\ref{fig:ch6:mpc_update}(a) shows the effect of changing the update period on the objective. We can see that as updates are made more frequent, control performance generally improves. This is because the approximate model can more closely match the simulation and hence appropriate control decisions can be made. There is however, a dip in performance at update periods of around \SI{50}{\years}. This is due to the precise timing of the updates. The late disease re-emergence occurs at around \SI{80}{\years}. Update periods of around \SI{50}{\years} will not update close to this outbreak, and so the MPC framework cannot respond to that unexpected increase in infection. This results in ineffective control.
+
+Figures~\ref{fig:ch6:mpc_update}(b) and (c) show the MPC control for update periods of 5 and 100 years respectively. The low frequency update corresponds to open-loop control. We can see that the main difference as update frequency increases, is additional continued thinning of bay. This results in less roguing being required later in the epidemic.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/MPC_update}
+        \caption[Effect of MPC update period]{Effect of the MPC update period on control performance. \textbf{(a)} shows the objective value as a function of how often the MPC re-optimises control. Reducing the time until the next update generally improves control, although update periods of around \SI{50}{\years} perform worse than expected. This is because these periods do not update close to the late outbreak, and therefore miss the unexpected increase in infection. \textbf{(b)} and \textbf{(c)} show the control allocations for update periods of 5 and 100 years respectively. The low frequency control here corresponds to open-loop control The high frequency control results in more continued thinning than in the low frequency control. The update times are shown as vertical black lines in \textbf{(b)}.\label{fig:ch6:mpc_update}}
+    \end{center}
+\end{figure}
+
+\FloatBarrier
+\subsection{Robust control}
+
+In this section we test the robustness of the results so far. In particular we analyse how parameter choices affect the control strategies selected by the open-loop and MPC frameworks, and their performance. We then investigate how the open-loop and MPC frameworks handle uncertainty in parameters and imperfect state estimation, i.e.\ not carrying out perfect sampling of the forest stand at the MPC update steps. These robustness analyses are important since the data available for fitting within-stand dynamics is limited.
+
+\subsubsection{Budget sensitivity}
+
+First we analyse the effect of the budget constraint. The maximum expenditure was chosen arbitrarily, so how much effect does it have on the optimal control strategy? Figure~\ref{fig:ch6:budget_scan} shows that in general the control strategy does not depend strongly on the budget. Across all budgets apart from the very smallest, largely the same set of control methods is used. As the budget increases, open-loop can allocate more resources to thinning, and with improved control both frameworks increase resources allocated to protection. It can also be seen that performance generally increases with increasing budget as might be expected. Kinks in this trend are due to some levels of control leading to a closer fit between the simulation and approximation, and hence improved control. At very high budgets control performance starts to degrade with budget. This is because in these cases the control is very effective in the approximate model, and so less control is carried out resulting in worse control in the simulation. As explained on page~\pageref{sec:ch6:lifting}, under-allocation of resources is not corrected for, although in this case the problem arises because a higher proportion of the available resources is allocated to protective controls. This results in less resource allocated to roguing, and hence less effective control.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Budget_scan}
+        \caption[Varying the control budget]{Effect of resource budget on control. \textbf{(a)} shows overall allocation of resources to each control method as a function of the maximum budget. Left hand bars show the results for open-loop, right hand bars for MPC\@. We can see that MPC generally allocates more to thinning, and require less roguing. \textbf{(b)} shows the corresponding simulation objectives for the open-loop and MPC frameworks. Control generally improves as the budget increases. Interestingly, only at the lowest budget is any resource allocated to thinning of small tanoak, as shown in \textbf{(c)}.\label{fig:ch6:budget_scan}}
+    \end{center}
+\end{figure}
+
+Interestingly, only at very low budgets, where neither control framework is very effective, do we see thinning of small tanoak. In these cases there are not enough resources to control the disease effectively with roguing of tanoak alone. The next best option in this case is thinning of small tanoak, which whilst it reduces infection, also reduces numbers of healthy tanoak. This is therefore only chosen as a control method when roguing alone is not enough.
+
+\subsubsection{Diversity benefit sensitivity}\label{sec:ch6:div_scan}
+
+Next we test sensitivity to the relative benefit of diversity compared to tanoak retention. In the base case the diversity benefit is chosen such that in the disease free case, the diversity benefit will be \SI{25}{\percent} of the tanoak retention objective value (as described in Section~\ref{sec:ch6:mgmt_objs}). In Figure~\ref{fig:ch6:div_scan} the control allocations and performance are shown, scanning over relative diversity benefit from 0 to \SI{100}{\percent}. It can be seen that, unsurprisingly, the best protection of tanoak, using both open-loop and MPC frameworks, is possible when there is no diversity benefit. As the diversity benefit increases, open-loop allocates fewer resources to thinning, and performance degrades. MPC however, can adapt and maintains high levels of tanoak protection through to the highest diversity benefits.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/DivCostScan}
+        \caption[Varying the diversity benefits]{Changes in control strategy and performance as the relative benefit of diversity is changed. Low diversity benefits result in more thinning, but improved retention of tanoak in thhe open-loop case. MPC is able to respond to changes in diversity and retain tanoak for all values of the diversity benefit.\label{fig:ch6:div_scan}}
+    \end{center}
+\end{figure}
+
+In Figure~\ref{fig:ch6:div_compare} we compare the control strategies and host dynamics with no diversity benefit, and the highest level of benefit. We can see that when there is no benefit to diversity protection, high levels of thinning are carried out that remove all bay and redwood trees. This leads to very effective disease control but is clearly undesirable in a mixed species forest stand. This demonstrates why diversity should be accounted for in the management objective. At the highest diversity benefit all species are retained in the system, but under open-loop control the disease is not controlled well towards the end of the epidemic. The same patterns are seen with the MPC framework, but the updates allow tanoak retention whilst also preserving diversity.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Div_cost_compare}
+        \caption[Host dynamics when varying the diversity benefits]{Open-loop control and host dynamics are shown for low diversity benefit (\textbf{(a)} and \textbf{(b)}) and high diversity benefit (\textbf{(c)} and \textbf{(d)}). Additional thinning is carried out when diversity benefits are low, resulting in complete removal of all bay and redwood trees.\label{fig:ch6:div_compare}}
+    \end{center}
+\end{figure}
+
+\subsubsection{Parameter sensitivity}
+
+Finally, we analyse the sensitivity of the control strategies to the underlying model parameterisation. As in Section~\ref{sec:ch5:model_sensitivity}, all parameters from Table~\ref{tab:ch6:control_methods} are randomly perturbed using a truncated normally distributed error with standard deviation of \SI{25}{\percent}. For each perturbed parameter set the approximate model was re-fitted, and control optimised using both the open-loop and MPC frameworks. The control strategies are compared across parameter sets by visualising the proportion of the budget that is allocated to each control class (thinning, roguing and protecting) over time. By sorting the parameter sets according to the objective function value, we test for any systematic differences in control strategy, for example larger epidemics requiring more thinning.
+
+Figure~\ref{fig:ch6:ol_sensitivity} shows the ordered control strategies using the open-loop framework. There is a very clear shared structure to all control strategies, with thinning always carried out early in the epidemic. Roguing is used throughout, and protection is only used once resource-intensive thinning has lowered bay and redwood densities enough for disease suppression and tanoak promotion in the approximate model. There is no strong systematic pattern to the strategies once ordered by objective value.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Sensitivity_ol_controls}
+        \caption[Open-loop control parameter sensitivity]{Sensitivity of open-loop control strategy to parameterisation. Each row corresponds to a single random parameter perturbation, with the rows ordered by the objective value under open-loop control. \textbf{(a)} shows the change in objective from the baseline parameterisation, with negative values signalling worse epidemics. \textbf{(b)}, \textbf{(c)} and \textbf{(d)} show the allocation of control resources over time to thinning, roguing and protecting control methods respectively. All strategies carry out thinning early in the epidemic, with roguing throughout and protection only after thinning is carried out.\label{fig:ch6:ol_sensitivity}}
+    \end{center}
+\end{figure}
+
+Figure~\ref{fig:ch6:mpc_sensitivity} shows similar results using the MPC framework. Here we can clearly see the additional thinning carried out over the course of the epidemic, at least in many of the cases. The strategies remain similar in structure, with most of the thinning carried out early in the epidemic, roguing throughout, and protection after the initial thinning regime. The difference in objective is here calculated relative to the baseline MPC strategy. Once again, there is little systematic structure when ordered by objective.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Sensitivity_mpc_controls}
+        \caption[MPC strategy parameter sensitivity]{Sensitivity of MPC strategy to parameterisation. As in Figure~\ref{fig:ch6:ol_sensitivity}, the control allocations are shown ordered by objective value, but here using the MPC framework updating every 20 years. Additional thinning is seen compared to open-loop, but no strong systematic pattern is seen.\label{fig:ch6:mpc_sensitivity}}
+    \end{center}
+\end{figure}
+
+\subsubsection{Parameter uncertainty}
+
+In reality, infection rates are rarely known with much precision. In practice, these parameters are often fitted to limited data with Bayesian techniques, giving a probability distribution of values \citep[e.g.][]{kleczkowski_parameter_2007, parry_bayesian_2014}. In this section we test how the open-loop and MPC control frameworks handle uncertainty in the dynamics of the system. Uncertainty is introduced with a distribution of infection rates in the simulation model, with any single realisation of the model using a set of infection rates drawn from that distribution. What benefit does feedback in the MPC framework have when the approximate model cannot capture the dynamics of each individual realisation accurately?
+
+The parameter distribution is chosen to be normal (truncated so that infection parameters remain positive), and the standard deviation is varied to imitate varying levels of uncertainty. For each level of uncertainty an ensemble of 200 simulations is generated, with each using a infection rate parameter set drawn from the distribution. A single approximate model is then fitted to this ensemble for each level of uncertainty (Figure~\ref{fig:ch6:param_uncert_fit}). The approximate model uses the same roguing rate scaling factor as previously found (Section~\ref{sec:ch6:control_scaling}, page~\pageref{sec:ch6:control_scaling}).
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Param_uncert_fit}
+        \caption[Ensemble fitting under parameter uncertainty]{Example of fitting to ensemble data for parameter uncertainty analysis. Here we show data using uncertainty in infection parameters with a standard deviation of \SI{20}{\percent}. An ensemble of 100 simulations with no control are carried out, and the approximate model is fitted to this ensemble. Control will then be tested on simulations with parameters drawn from the same distribution. \textbf{(a)}, \textbf{(b)} and \textbf{(c)} show the number of infected small tanoak, large tanoak and bay hosts respectively, for the ensemble and fitted approximate model.\label{fig:ch6:param_uncert_fit}}
+    \end{center}
+\end{figure}
+
+To test control on these parameter distributions, for a single draw of infection rates from the distribution, the fitted approximate model is used to run the open-loop and MPC frameworks. This is repeated for 200 draws from each distribution. Figure~\ref{fig:ch6:param_uncert} shows the results of this experiment. As the infection rate distribution broadens, making the parameters more uncertain, the range of objective values obtained increases for both open-loop and MPC\@. Both frameworks result in improved control as uncertainty increases, due to parameter sets being drawn that result in easier to control epidemics. Looking at the distribution of objective values at the largest level of uncertainty (\SI{40}{\percent}; Figure~\ref{fig:ch6:param_uncert}(b)) we can see that where objectives are high, and epidemics are therefore easy to control, there is little difference between open-loop and MPC\@. This is why the median performance of open-loop and MPC are very similar at high parameter uncertainty. 
+
+At the lower end of objectives though, where the epidemic is harder to control, MPC shows a significant improvement over open-loop. In Figure~\ref{fig:ch6:param_uncert}(b) the worse case scenario is improved by using MPC rather that open-loop. Looking at absolute improvement (difference in objective values; Figure~\ref{fig:ch6:param_uncert}(c)), MPC retains up to \SI{50}{\percent} more of the original tanoak population than under open-loop. MPC is therefore useful for limiting the worst case scenario under parameter uncertainty, highlighting the importance of continued surveillance when disease progression cannot be predicted accurately.
+
+In the open-loop case there is a large peak at very low objective values. In these cases the control strategy fails to manage the epidemic, and almost all tanoak is lost. The peak is less prominent in the MPC case, since the updates allow control to respond to unexpected changes. This can result in more intermediate performance because outbreaks can be caught at an earlier stage.
+
+\begin{figure}[h]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Param_uncert}
+        \caption[Performance of OL and MPC under parameter uncertainty]{Effect of parameter uncertainty on the performance of open-loop and MPC strategies. In \textbf{(a)}, shaded areas show the 5\textsuperscript{th} to 95\textsuperscript{th} percentiles of the objective values, with the medians shown as solid lines, as a function of parameter uncertainty. The parameter uncertainty is the standard deviation used to perturb the infection rate parameters in the ensemble of simulations. \textbf{(b)} shows the distribution of objectives for open-loop and MPC, using a parameter uncertainty of \SI{40}{\percent}. The MPC framework improves performance in the worst case epidemics. In \textbf{(c)} the absolute difference between open-loop and MPC objectives is shown. We can see that for cases where open-loop performs poorly, MPC is significantly better.\label{fig:ch6:param_uncert}}
+    \end{center}
+\end{figure}
+\FloatBarrier
+\subsubsection{Observational uncertainty}
+
+Next, we analyse the performance of MPC when surveillance at the update times is imperfect. The re-optimisation of control in the MPC framework requires accurate information about the current state of the forest, however full stand surveys are expensive to carry out. We here test whether the intensity of these update surveys can be reduced whilst maintaining effective control, and whether open-loop strategies ever outperform MPC with low quality surveillance.
+
+We introduce uncertainty into the state update step in the MPC framework. The state here is measured in the simulation model imperfectly, and then this observed state is used as the new initial conditions for the approximate model. We assume that surveillance at the initial time is perfect. This captures a scenario where a full forest survey is carried out early in the epidemic. As the epidemic starts with very few initial infected hosts, the surveillance at this time must have been effective, and so we here assume a perfect survey. At later update times though, only a proportion of the forest stand is sampled leading to imperfect observation of the epidemic state. Each cell in the simulation model is divided into 500 \SI{1}{\meter\squared} discrete units. Each unit can contain either host (tanoak 1--4, bay, or redwood), or be empty. Surveillance at update steps is then carried out by observing a fixed number of units in each cell across the landscape, without replacement. Infection status of tanoak and bay hosts is determined randomly, with probabilities matching the proportion of that host that is infected. The results are shown in Figure~\ref{fig:ch6:obs_uncert}.
+
+The results show that as the proportion of area sampled decreases, the uncertainty in the outcome of MPC increases. The median performance of MPC also decreases. This is because as less of the forest is sampled, there is a higher chance that infection will be missed entirely during surveillance. The framework at that update step is then optimising control in the absence of disease. This clearly reduces the efficacy of the resulting control strategy. In Figure~\ref{fig:ch6:obs_uncert}(b) we show the effect this could have on the costs of disease management. We introduce a fixed cost per unit area sampled for the update step surveys, and negate the objective function value as a measure of management benefits. The overall cost is then given by:
+\begin{equation}
+    \textrm{cost} = k_1Np - k_2J
+\end{equation}
+where $k_1$ and $k_2$ are arbitrary constants, $N$ is the number of surveys carried out surveying a proportion $p$ of the forest, and $J$ is the management objective function. The choice of constants $k_1$ and $k_2$ is arbitrary, and must be carried out by a forest manager since it balances management and surveillance costs with diversity and tanoak retention benefits. We here choose $k_1$ as 10, and $k_2$ as 45.
+
+Combining surveillance costs and management objectives, we see that there is an optimal intensity of surveillance to carry out (Figure~\ref{fig:ch6:control_scaling}(c)). Whilst this clearly depends on actual costs incurred, and the balance between tanoak protection, diversity conservation, and treatment costs, there is a clear need for some level of surveillance. It can also be seen that to minimise the 95\textsuperscript{th} percentile a higher intensity of surveillance is required. This would represent the control policy of a risk-averse manager.
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{Graphics/ch6/Obs_uncert}
+        \caption[Performance of MPC under observational uncertainty]{\textbf{(a)} shows the objective value when there is observational uncertainty at MPC updates. The uncertainty is modelled as random sampling of a proportion of the forest stand area. Shaded areas show the 5\textsuperscript{th} to 95\textsuperscript{th} percentiles of the objective values. In \textbf{(b)} the costs associated with control and update surveys are shown. Surveillance costs increase as surveillance becomes more intensive, but the benefits of improved control (negative costs) also increase. \textbf{(c)} shows the corresponding overall cost under observational uncertainty, including costs for MPC update surveys. Reduced costs of less intensive surveying must be balanced with less effective control when there is uncertainty about the pathogen extent.\label{fig:ch6:obs_uncert}}
+    \end{center}
+\end{figure}
+
+\FloatBarrier
+\subsection{Global optimal strategy}
+
+When the approximate model was parameterised, the roguing rate was scaled so that the model matched the simulation as accurately as possible under control. So as not to bias results no assumptions were made about the form of the control, and the scaling was carried out using a constant roguing rate. Now that the optimal strategy has been found, we are in a position to re-consider this scaling to parameterise the best possible fitting approximate model. Whilst in most real applications of open-loop and MPC this would not be possible due to uncertainties in the simulation model, lack of data or stochasticity for example, here we can test the performance of a refined, optimal approximate model.
+
+The roguing rate in the approximate model was rescaled using the open-loop control strategy found in Section~\ref{sec:ch6:open_loop}. This ensures the approximate model fits best under the type of control that will be optimal. As before in Section~\ref{fig:ch6:control_scaling}, the roguing rate was scaled to best match the final number of tanoaks in the simulation model. As shown in Figure~\ref{fig:ch6:Global_optimal}(a) this gives a much lower scaling factor than was previously obtained.
+
+\begin{figure}[t!]
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{Graphics/ch6/Global_optimal}}
+        \caption[Globally optimal strategy]{Rescaling the roguing rate in the approximate model to find a globally optimal strategy. \textbf{(a)} shows the optimisation of the new roguing rate scaling factor, chosen to minimise the deviation in final tanoak numbers between approximation and simulation. \textbf{(b)} shows the open-loop control strategy found using this newly parameterised model, with the state dynamics shown in \textbf{(d)}. The approximate model matches the simulation dynamics very closely. This allows improved disease management, as shown in \textbf{(c)}. The newly scaled frameworks outperform the previous strategies.\label{fig:ch6:Global_optimal}}
+    \end{center}
+\end{figure}
+
+When this new approximate model is optimised, the control strategy found is very similar to the previous open-loop strategy (Figure~\ref{fig:ch6:Global_optimal}(b)), but the approximate model fits the simulation much better (Figure~\ref{fig:ch6:Global_optimal}(c)). This results in control that is more effective than either the open-loop or MPC strategies found previously. Since the approximate model fits better, there is little benefit to the repeated updates of the MPC framework, and so MPC using the newly parameterised model is only a marginal improvement over open-loop (Figure~\ref{fig:ch6:Global_optimal}(c)).
+
+\FloatBarrier
+\section{Discussion\label{sec:ch6:discussion}}
+
+\section{Conclusions\label{sec:ch6:conclusions}}

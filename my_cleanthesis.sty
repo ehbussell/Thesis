@@ -237,6 +237,7 @@
 \RequirePackage{blindtext}		% package for blind text
 \RequirePackage{textcomp}			% different symbols
 \RequirePackage{titlesec}
+\RequirePackage{amsmath}
 \RequirePackage{hyperref} 			% interactive link inside the document
 
 %
@@ -295,7 +296,9 @@
 	maxcitenames=2,%
 	mincitenames=1,
 	firstinits=true,
-	terseinits=true
+	terseinits=true,
+	sorting=nyt,
+	dashed=false
 ]{biblatex}
 % \bibliography{\cthesis@bibfile}
 \DefineBibliographyStrings{ngerman}{%

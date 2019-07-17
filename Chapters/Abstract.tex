@@ -1,0 +1,41 @@
+%!TEX root = ../thesis.tex
+%
+
+% For abstract only:
+\let\cleardoublepage\relax
+\newgeometry{paper=a4paper,
+nohead,
+includefoot,
+includemp,
+bindingoffset=0.0cm,
+top=2.25cm,
+left=3.75cm,
+right=3.75cm,
+bottom=1.5cm,
+marginparwidth=0.0cm,
+marginparsep=0pt,
+footskip=2cm,
+}
+
+{\chapter*{\makebox[\textwidth]{Abstract}}}
+\addtocontents{toc}{\protect\vspace*{-10pt}}
+\addcontentsline{toc}{chapter}{Abstract}
+\label{sec:abstract}
+\vspace*{-10mm}
+% For abstract only:
+\thispagestyle{empty}
+
+\begin{center}
+    {\Large\thesisTitle}
+    
+    \vspace*{5mm}
+    
+    {\large\thesisName}
+    \vspace*{10mm}
+\end{center}
+
+Mathematical models of tree diseases often have little to say about how to manage epidemics. Models often show that it is too late for successful disease eradication, but few study what management could still be beneficial. This study focusses on finding effective control strategies for managing sudden oak death, a tree disease caused by \emph{Phytophthora~ramorum}. Sudden oak death is a devastating disease spreading through forests in California and southwestern Oregon. The disease is well established and eradication is no longer possible. The ongoing spread of sudden oak death is threatening high value tree resources, including national parks, and culturally and ecologically important species like tanoak. In this thesis we show how the allocation of limited resources for controlling sudden oak death can be optimised to protect these valuable trees.
+
+We apply the mathematical framework of optimal control theory to approximate models of sudden oak death dynamics, in order to optimise control of complex, spatial simulation models. Lifting the optimised controls to the complex simulation, we demonstrate that the framework finds effective strategies for protecting tanoak, whilst also conserving biodiversity. When applied to the problem of protecting Redwood national park, the framework finds spatial strategies that balance protective barriers with control at the epidemic wavefront. Computationally, the control optimisation is limited to relatively simple approximate models. We show how a lack of accuracy in the approximate model can be accounted for by using model predictive control from control systems engineering: an approach coupling feedback with optimal control theory. Continued surveillance of the complex system and re-optimisation of the control strategy ensures that the result remains close to optimal, and leads to highly effective disease management.
+
+In this thesis we show how the machinery of optimal control theory can inform plant disease management, protecting valuable resources from sudden oak death. Incorporating feedback into the application of the resulting strategies ensures control remains effective over long time scales, and is robust to uncertainties and stochasticity in the system. Local management of sudden oak death is still possible, and our results show how.

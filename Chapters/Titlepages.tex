@@ -1,0 +1,94 @@
+%!TEX root = ../thesis.tex
+%
+
+\newsavebox{\collegedate}
+\begin{lrbox}{\collegedate}
+\begin{minipage}[c]{\textwidth}
+  \large
+  \ifthenelse{\equal{\thesisCollege}{}}{
+    % college is not defined
+    \begin{center}
+      \thesisDate
+    \end{center}
+  }{
+    % college is defined
+    \begin{minipage}[b]{0.49\textwidth}
+      \flushleft\thesisCollege
+    \end{minipage}
+    \begin{minipage}[b]{0.49\textwidth}
+      \flushright \thesisDate
+    \end{minipage}
+  } % college is defined
+\end{minipage}
+\end{lrbox}
+
+
+% Title page
+\thispagestyle{empty}
+\begin{center}
+    \centering
+    %Thesis title
+    \vspace{1.5cm}
+    {\LARGE \thesisTitle\par}
+    \vspace{2cm}
+    %University logo
+        \includegraphics[width=0.35\linewidth]{Graphics/University_Crest}
+        \par
+        \vspace{2cm}
+%Author's name
+    {\LARGE \thesisName\par}
+    \vspace{1cm}
+    {\large \thesisUniversityDepartment\par}
+    {\large \thesisUniversity\par}
+    \vspace{2cm}
+%Degree
+    {\Large This dissertation is submitted for the degree of\\\emph{Doctor of Philosophy}\par}
+    \vfill{}
+%Date
+    {\usebox{\collegedate}}
+\end{center}
+\clearpage
+
+\cleardoublepage
+
+\pagestyle{plain}				% display just page numbers
+
+% Declaration
+% \pdfbookmark[0]{Declaration}{Declaration}
+\chapter*{Declaration}
+\addtocontents{toc}{\protect\vspace*{-10pt}}
+\addcontentsline{toc}{chapter}{Declaration}
+\label{sec:declaration}
+\vspace*{-10mm}
+
+This dissertation is the the result of my own work and includes nothing which is the outcome
+of work done in collaboration except as declared in the Preface and specified in the text.
+
+This dissertation is not substantially the same as any that I have submitted, or, is being
+concurrently submitted for a degree or diploma or other qualification at the University of
+Cambridge or any other University or similar institution except as declared in the Preface and
+specified in the text. I further state that no substantial part of my dissertation has already
+been submitted, or, is being concurrently submitted for any such degree, diploma or other
+qualification at the University of Cambridge or any other University or similar institution
+except as declared in the Preface and specified in the text.
+
+This dissertation does not exceed the prescribed word limit of 60,000 words (excluding
+bibliography, figures and appendices) as specified by the Degree Committee of the Faculty
+of Biology.
+
+\vspace*{2cm}
+
+Elliott Bussell
+
+\thesisDate
+\cleardoublepage
+
+% Acknowledgements
+% \pdfbookmark[0]{Acknowledgements}{Acknowledgements}
+\chapter*{Acknowledgements}
+\addtocontents{toc}{\protect\vspace*{-10pt}}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+\label{sec:acknowledgements}
+\vspace*{-10mm}
+
+\blindtext

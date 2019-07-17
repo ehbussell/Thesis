@@ -40,6 +40,7 @@
 % **************************************************
 % Load and Configure Packages
 % **************************************************
+\usepackage{amsmath}
 \usepackage[utf8]{inputenc}		% defines file's character encoding
 \usepackage[english]{babel} % babel system, adjust the language of the content
 \usepackage[nodisplayskipstretch]{setspace}
@@ -59,11 +60,11 @@
 \bibliography{References.bib}
 % \cthesissetcolor{cmyk}{1, .50, .10, .01}{.18, .0, .18, 0}%
 
+\usepackage{afterpage}
 \usepackage{lineno}
 \usepackage[group-separator={,},group-minimum-digits={4}]{siunitx}
 \usepackage{duckuments}
 \usepackage{booktabs}
-\usepackage{amsmath}
 \usepackage{placeins}
 \usepackage{algorithm}
 \usepackage{algorithmicx}
@@ -104,6 +105,8 @@
 \setlength{\bibitemsep}{0.5\baselineskip plus 0.5\baselineskip}
 \renewbibmacro{in:}{%
   \ifentrytype{article}{}{\printtext{\bibstring{in}\intitlepunct}}}
+\DeclareFieldFormat[online]{url}{Available at: \url{#1}}
+\DeclareFieldFormat[online]{urldate}{\mkbibparens{\bibstring{urlseen}\space#1}}
 
 \renewcommand{\arraystretch}{1.5}
 
@@ -132,7 +135,7 @@ pdfpagelayout=TwoPageRight
 % **************************************************
 % Document CONTENT
 % **************************************************
-% \includeonly{Chapters/Chapter03}
+\includeonly{Chapters/Abstract}
 % To print only figures:
 % \usepackage[active, tightpage]{preview}
 % \PreviewBorder=12pt\relax
@@ -150,7 +153,11 @@ pdfpagelayout=TwoPageRight
 % --------------------------
 %TC:ignore
 \pagenumbering{arabic}			% arabic page numbering
-\include{Chapters/Frontmatter}		% INCLUDE: all titlepages
+\include{Chapters/Titlepages}		% INCLUDE: all titlepages
+%TC:endignore
+\include{Chapters/Abstract}
+%TC:ignore
+\include{Chapters/Frontmatter}
 
 % --------------------------
 % Body matter
@@ -167,24 +174,13 @@ pdfpagelayout=TwoPageRight
 \include{Chapters/Chapter03}
 \include{Chapters/Chapter04}
 \include{Chapters/Chapter05}
-\cleardoublepage{}
+\include{Chapters/Chapter06}
 
 % --------------------------
 % Back matter
 % --------------------------
 %TC:ignore
-{%
-\setstretch{1.1}
-\printbibliography{}
-}
-% \cleardoublepage
-
-%\cleardoublepage
-%
-%\input{content/declaration}
-\clearpage
-\newpage
-\mbox{}
+\include{Chapters/Backmatter}
 %TC:endignore
 
 % **************************************************
