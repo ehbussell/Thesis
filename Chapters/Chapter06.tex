@@ -69,7 +69,7 @@ For each of the 9 controls in Table~\ref{tab:ch6:control_methods}, we seek to fi
 \begin{equation}
     \sum_i \left(f_i\eta_iX_i\right)c_i \leq B
 \end{equation}
-where $X_i$ is the stem density of the controlled hosts. For example, for roguing of small tanoak $X_i$ would be $\left(I_{1,1} + I_{1,2}\right)$. The term in brackets is therefore the rate of removal of hosts for each control. The cost of each control is given by $c_i$ and the maximum budget is given by $B$.
+where $X_i$ is the stem density of the controlled hosts. For example, for roguing of small tanoak $X_i$ would be $\left(I_{1,1} + I_{1,2}\right)$. The term in brackets is therefore the rate of removal of hosts for each control. The cost of each control is given by $c_i$ and the maximum budget is given by $B$. \todo{Mention where costs from.}
 
 \subsection{Approximate model}
 
@@ -197,7 +197,7 @@ Figures~\ref{fig:ch6:mpc_update}(b) and (c) show the MPC control for update peri
 \end{figure}
 
 \FloatBarrier
-\subsection{Robust control}
+\subsection{Robust control}\label{sec:ch6:robust}
 
 In this section we test the robustness of the results so far. In particular we analyse how parameter choices affect the control strategies selected by the open-loop and MPC frameworks, and their performance. We then investigate how the open-loop and MPC frameworks handle uncertainty in parameters and imperfect state estimation, i.e.\ not carrying out perfect sampling of the forest stand at the MPC update steps. These robustness analyses are important since the data available for fitting within-stand dynamics is limited.
 
@@ -322,4 +322,38 @@ When this new approximate model is optimised, the control strategy found is very
 \FloatBarrier
 \section{Discussion\label{sec:ch6:discussion}}
 
+In this chapter we have seen how the frameworks developed in Chapter~\ref{ch:complex_models} can be applied to a real-world scenario: control of sudden oak death in forest stands. As we found before, the feedback in the MPC framework improves management, and leads to more robust control. In this section we will discuss how these results relate to practical management of SOD.
+
+\subsection{Practical application of management strategies}
+
+Current advice for management of SOD centers around removal of the spreader species, bay laurel, infected hosts, and susceptible hosts close to known infections \citep{comtf_sudden_2014}. Application of protective chemical treatments is also recommended for high values tree that are close to infections and known not to be currently infected. The strategies found using OCT in this chapter are broadly similar in nature. We have found that thinning of bay laurel is very important to the success of disease management, along with roguing of infected tanoak. Roguing of infected bay is less important as thinning reduced bay population densities sufficiently for disease control. Management advice form the US Forest Service \citep{swiecki_reference_2013} suggest removal of bay trees, and in some cases complete area-wide removal of bay. Our results show that with continued surveillance and careful optimisation of controls, disease control can be successful whilst maintaining a bay population which may be ecologically important. However, when biodiversity benefits are less important, control is always easier and more effective with additional removal of bay laurel.
+
+Application of chemical protectants is only recommended for individual high value trees close to known infections \citep{comtf_sudden_2014}. The strategies we have found deploy significant protection resources though. In fact, the protectant application only has a very minor effect on the performance of the open-loop and MPC strategies, and is unlikely to be cost-effective. Our formulation of the budget constraint implements a maximum expenditure which is perhaps closer to reality, where a fixed amount of money is put aside for SOD control. In practice though, control methods will also be assessed for cost-effectiveness, and it seems unlikely protectant strategies would be used.
+
+A possible limitation of the strategies we have found is their complexity. Control inputs were fixed over \SI{5}{\year} intervals so that resources do not have to be continually moved, but the strategies are still complex in their time dependence, and relative allocations to multiple control methods. The findings of the results, even if not directly applicable, could still be useful though. Building up an intuition about what drives the optimal strategy could lead to more practical advice. For example, in the open-loop and MPC strategies thinning of bay is carried out early before switching to thinning of redwood. These species are reduced to a threshold density that OCT has identified as sufficiently low to suppress pathogen spread, and promote tanoak restoration. Advice about optimal densities of different species in mixed stands could provide actionable advice for foresters.
+
+\citep{maccleery_reinventing_2015, cobb_resiliency_2017, cobb_biodiversity_2013, ndeffo_mbah_balancing_2010, ndeffo_mbah_optimization_2010}
+
+\subsection{Choosing management goals}
+
+The complexity of the optimal strategies found comes from balancing multiple costs and benefits: tanoak retention, biodiversity conservation, control expenditure and surveillance costs. The valuation of the cultural and ecological benefits against more direct economic costs is a difficult decision that must be taken by forest managers, in the context of the local area. Decisions about management goals though, either locally or through larger scale regulation, can lead to conflicts that may impact the effectiveness of control \citep{alexander_lessons_2010}.
+
+As well as valuation though, the formulation of the different cost functions is important. Here, we chose an integrated metric for biodiversity conservation. This captures the importance of continued biodiversity for wildlife habitats, but also avoids introducing edge effects, for example thinning very late in the epidemic to meet a biodiversity target. This introduces a dependence on the chosen time horizon of \SI{100}{\years}, which is also present in the tanoak objective. This is appropriate for a restoration type management goal, such as ensuring a resource is available in the future. There is still however, a flexibility in the form of the objective function chosen, and the precise choice of objective does impact disease control \citep{probert_decision_2016}.
+
+Other management goals? \citep{cobb_resiliency_2017}
+
+It is also important to consider the effect of the control strategies on the forest. Whilst the effects of the disease can be devastating, particularly to tanoak populations, the optimal control strategies remove large numbers of trees including trees that will not die from the disease. This could be more damaging to the forest ecosystem than the disease effects would have been. \citet{alexander_lessons_2010} write that a land manager feared an outcome of `destroy the village to save it'. A difficult problem for forest managers is when control should be abandoned, as has been done in the `Generally Infested Area' in Oregon \citep{hansen_efficacy_2019}.
+
+\subsection{Continued surveillance and re-optimisation}
+
+We have shown that continued surveillance efforts are required to limit the damage of the worst case scenarios. Effort put into this long-term surveillance has to be cost-effective though. With imperfect surveillance introducing observational uncertainty, an optimal balance between survey costs and epidemic control was found. However, this doesn't incorporate the level of risk of disease re-emergence. Our model is deterministic, so does not capture stochastic re-introductions. Also the state of the epidemic in the wider region will impact the risk of re-emergence through potentially increasing inoculum pressure. Forest managers must take into account these other factors in determining optimal levels of surveillance, but regardless we have shown that vigilance to disease presence is important. Alongside this vigilance must be a willingness to adapt control measures, re-optimising control to suit the current state of the epidemic and changing local management goals.
+
+\subsection{Robust control}
+
+We showed in Section~\ref{sec:ch6:robust} that te general form of the optimal control strategy is robust to changes in parameterisation. In all cases a period of thinning is carried out before protection starts, and roguing is carried out throughout the epidemic. The relative performance though, both in parameter sensitivity and paramter uncertainty studies can vary significantly. In Figure~\ref{fig:ch6:param_uncert} we saw that under high levels of parameter uncertainty, some epidemics become much easier to control, and others muh harder. In the open-loop case this leads to split in the distribution of objective values into those where intial control manages the disease, and those where re-emergence leads to significant loss of tanoak. This shows how a poorly designed strategy can lead to significant disease impacts.
+
+In testing robustness we showed that the MPC framework is able to mitigate the effects of the most damaging epidemics, improving management performance in the worst case scenarios. \citet{maccleery_reinventing_2015} states that a major barrier to US Forest Service management is the opposition to adaptive management, in which ongoing monitoring is used to update management advice. This is seen as too `experimental' and increases short-term risk, but avoidance means strategies cannot be adapted based on what is seen `on the ground'. Here we have shown a clear benefit to the ongoing surveillance and re-optimisation of control, with MPC as a formal framework for adapting strategies.
+
 \section{Conclusions\label{sec:ch6:conclusions}}
+
+In this chapter we have optimised strategies for halting pathogen-induced decline of tanoak in mixed species forest stands. OCT was used to find optimal time-dependent deployment of thinning, roguing, and protecting control resources. The strategies found are broadly consistent with current expert advice: focussing on thinning of bay laurel and roguing of infected trees. Continued surveillance and re-optimisation of the control strategy by using the MPC framework improves control performance. MPC leads to robust strategies that can effectively respond to disease re-emergence and system uncertainties.
