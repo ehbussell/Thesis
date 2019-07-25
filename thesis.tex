@@ -24,7 +24,7 @@
 % **************************************************
 % Information and Commands for Reuse
 % **************************************************
-\newcommand{\thesisTitle}{Plant disease management to protect valuable resources using optimal control theory and feedback strategies}
+\newcommand{\thesisTitle}{Protecting valuable resources using optimal control theory and feedback strategies for plant disease management}
 \newcommand{\thesisName}{Elliott Hamilton Bussell}
 \newcommand{\thesisSubject}{Epidemiology}
 \newcommand{\thesisCollege}{Jesus College}
@@ -62,7 +62,7 @@
 
 \usepackage{afterpage}
 \usepackage{lineno}
-\usepackage[group-separator={,},group-minimum-digits={4}]{siunitx}
+\usepackage[group-separator={,},group-minimum-digits={4},per-mode=reciprocal]{siunitx}
 \usepackage{duckuments}
 \usepackage{booktabs}
 \usepackage{placeins}
@@ -83,7 +83,7 @@
 \DeclareSIUnit\years{years}
 \DeclareSIUnit\hosts{hosts}
 \DeclareSIUnit\host{host}
-\sisetup{detect-all = true}
+\sisetup{detect-all=true, per-mode=reciprocal}
 
 % Bibliography setup
 \DeclareFieldFormat[article]{titlecase}{\MakeSentenceCase*{#1}}
@@ -128,14 +128,14 @@ breaklinks=true,			% 	- allow line break inside links
 bookmarksnumbered=true,		%
 bookmarksopen=true,			%
 bookmarksopenlevel=0,
-pdfpagelayout=TwoPageRight
+pdfpagelayout=TwoPageLeft
 }
 \usepackage{bookmark}
 
 % **************************************************
 % Document CONTENT
 % **************************************************
-\includeonly{Chapters/Chapter04, Chapters/Backmatter}
+\includeonly{Chapters/Chapter07}
 % To print only figures:
 % \usepackage[active, tightpage]{preview}
 % \PreviewBorder=12pt\relax
@@ -175,6 +175,8 @@ pdfpagelayout=TwoPageRight
 \include{Chapters/Chapter04}
 \include{Chapters/Chapter05}
 \include{Chapters/Chapter06}
+\include{Chapters/Chapter07}
+\include{Chapters/Chapter08}
 
 % --------------------------
 % Back matter
