@@ -43,7 +43,7 @@ Roguing controls can be applied separately to infected small tanoak, large tanoa
 
 \begin{table}[h]
     \centering
-    \caption{Possible control methods implemented in the stand level model. There are three main groups of control: roguing, thinning and protecting, and these can be targeted at different host groups. Approximate costs of each control are taken from \citet{kovacs_predicting_2011}, but roguing costs are increased to account for additional costs of identification and removal of unstable SOD affected trees.\label{tab:ch6:control_methods}}
+    \caption[Possible control methods implemented in the stand level model]{Possible control methods implemented in the stand level model. There are three main groups of control: roguing, thinning and protecting, and these can be targeted at different host groups. Approximate costs of each control are taken from \citet{kovacs_predicting_2011}, but roguing costs are increased to account for additional costs of identification and removal of unstable SOD affected trees.\label{tab:ch6:control_methods}}
     \begin{tabular}{@{}llcc@{}}
         \toprule
         \textbf{Control} & \textbf{State changes} & \textbf{Rate} $\eta_I$ / \si{\per\year} & \textbf{Cost} $c_i$ / a.u.\\
@@ -306,7 +306,7 @@ Combining surveillance costs and management objectives, we see that there is an 
 \end{figure}
 
 \FloatBarrier
-\subsection{Global optimal strategy}
+\subsection{Refined optimal strategy}
 
 When the approximate model was parameterised, the roguing rate was scaled so that the model matched the simulation as accurately as possible under control. So as not to bias results no assumptions were made about the form of the control, and the scaling was carried out using a constant roguing rate. Now that the optimal strategy has been found, we are in a position to re-consider this scaling to parameterise the best possible fitting approximate model. Whilst in most real applications of open-loop and MPC this would not be possible due to uncertainties in the simulation model, lack of data or stochasticity for example, here we can test the performance of a refined, optimal approximate model.
 
@@ -315,7 +315,7 @@ The roguing rate in the approximate model was rescaled using the open-loop contr
 \begin{figure}[t!]
     \begin{center}
         \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{Graphics/ch6/Global_optimal}}
-        \caption[Globally optimal strategy]{Rescaling the roguing rate in the approximate model to find a globally optimal strategy. \textbf{(a)} shows the optimisation of the new roguing rate scaling factor, chosen to minimise the deviation in final tanoak numbers between approximation and simulation. \textbf{(b)} shows the open-loop control strategy found using this newly parameterised model, with the state dynamics shown in \textbf{(d)}. The approximate model matches the simulation dynamics very closely. This allows improved disease management, as shown in \textbf{(c)}. The newly scaled frameworks outperform the previous strategies.\label{fig:ch6:Global_optimal}}
+        \caption[Refined optimal strategy under rescaled roguing rate]{Rescaling the roguing rate in the approximate model to find a refined optimal strategy. \textbf{(a)} shows the optimisation of the new roguing rate scaling factor, chosen to minimise the deviation in final tanoak numbers between approximation and simulation. \textbf{(b)} shows the open-loop control strategy found using this newly parameterised model, with the state dynamics shown in \textbf{(d)}. The approximate model matches the simulation dynamics very closely. This allows improved disease management, as shown in \textbf{(c)}. The newly scaled frameworks outperform the previous strategies.\label{fig:ch6:Global_optimal}}
     \end{center}
 \end{figure}
 

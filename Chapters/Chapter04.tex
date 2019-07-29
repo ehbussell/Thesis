@@ -53,7 +53,7 @@ In the simulation model, infection spreads stochastically across a network of no
     \centering
     \includegraphics[width=0.5\textwidth]{Graphics/Ch4/Node_Structure}
     \includegraphics[width=0.5\textwidth]{Graphics/Ch4/Model_Structure}
-    \caption{\textbf{(a)} The network used for the simulation model, including region labels. The epidemic is seeded in the red node in region A, and can spread between connected nodes (grey lines). \textbf{(b)} Diagram of host states and transitions. For transition rates see Table~\ref{tab:ch4:rates}. Hosts are classed as susceptible ($S$), infected ($I$), vaccinated ($V$), or removed ($R$).}
+    \caption[Network epidemic model structure]{\textbf{(a)} The network used for the simulation model, including region labels. The epidemic is seeded in the red node in region A, and can spread between connected nodes (grey lines). \textbf{(b)} Diagram of host states and transitions. For transition rates see Table~\ref{tab:ch4:rates}. Hosts are classed as susceptible ($S$), infected ($I$), vaccinated ($V$), or removed ($R$).}
     \label{fig:ch4:node_structure_and_model}
 \end{figure}
 
@@ -70,7 +70,7 @@ Trajectories are simulated using the Gillespie direct method \citep{gillespie_ex
 \begin{figure}[htb]
     \begin{center}
         \includegraphics[width=\textwidth]{Graphics/Ch4/No_Control_DPC}
-        \caption{Ten typical simulation model trajectories with no control. Green and red lines represent susceptible and infected hosts respectively.\label{fig:ch4:no_control_dpc}}
+        \caption[Uncontrolled network model dynamics]{Ten typical simulation model trajectories with no control. Green and red lines represent susceptible and infected hosts respectively.\label{fig:ch4:no_control_dpc}}
     \end{center}
 \end{figure}
 
@@ -82,7 +82,7 @@ where $I$ is the total number of infected hosts across the network. In common wi
 
 \begin{table}
     \centering
-    \caption{Possible events in the simulation model with associated rates.\label{tab:ch4:rates}}
+    \caption[Possible events in the simulation model]{Possible events in the simulation model with associated rates.\label{tab:ch4:rates}}
     \begin{tabular}{@{}lll@{}}
         \toprule
         \textbf{Event} & \textbf{State Change} & \textbf{Rate} \\
@@ -99,7 +99,7 @@ where $I$ is the total number of infected hosts across the network. In common wi
         
 \begin{table}[htb]
     \centering
-    \caption{Parameter values used for simulation model trajectories. Note that the units of time are arbitrary.\label{tab:ch4:parameters}}
+    \caption[Parameter values in the simulation model]{Parameter values used for simulation model trajectories. Note that the units of time are arbitrary.\label{tab:ch4:parameters}}
     \begin{tabular}{@{}lll@{}}
         \toprule
         \textbf{Meaning} & \textbf{Parameter} & \textbf{Default Value} \\
@@ -170,7 +170,7 @@ Fits to simulation data are shown for the risk based model in Figure~\ref{fig:ri
 \begin{figure}[h]
     \begin{center}
         \includegraphics[width=0.75\textwidth]{Graphics/Ch4/Risk_Fit}
-        \caption{Fits to simulation data for the risk based model. Dashed lines show the risk model, and faded lines show 20 of the simulation runs. Green and red lines represent susceptible and infected hosts respectively.}
+        \caption[Risk based approximate model fitted to the network model]{Fits to simulation data for the risk based model. Dashed lines show the risk model, and faded lines show 20 of the simulation runs. Green and red lines represent susceptible and infected hosts respectively.}
         \label{fig:risk_fit}
     \end{center}
 \end{figure}
@@ -178,7 +178,7 @@ Fits to simulation data are shown for the risk based model in Figure~\ref{fig:ri
 \begin{figure}[h]
     \begin{center}
         \includegraphics[width=\textwidth]{Graphics/Ch4/Space_Fit}
-        \caption{Fits to simulation data for the space based model. Dashed lines show the space model, and faded lines show 20 of the simulation runs. Green and red lines represent susceptible and infected hosts respectively. We note that the approximate dynamics are faster than those in the simulations. This effect is explained in the text.\label{fig:space_fit}}
+        \caption[Space based approximate model fitted to the network model]{Fits to simulation data for the space based model. Dashed lines show the space model, and faded lines show 20 of the simulation runs. Green and red lines represent susceptible and infected hosts respectively. We note that the approximate dynamics are faster than those in the simulations. This effect is explained in the text.\label{fig:space_fit}}
     \end{center}
 \end{figure}
 
@@ -191,7 +191,7 @@ where $\hat{\pi}$ is the maximum likelihood, and $\pi$ is the profile likelihood
 \begin{figure}
     \begin{center}
         \includegraphics[width=\textwidth]{Graphics/Ch4/Profile_Likelihoods}
-        \caption{Profile likelihood analysis for: \textbf{(a)} the risk based approximate model, and \textbf{(b)} the space based approximate model. The offsets ($1.137\times10^6$ for \textbf{(a)} and $9.583\times10^5$ for \textbf{(b)}) must be added to all values on the y axes. The profile for every parameter crosses the 95\% confidence interval threshold, ensuring identifiability of each parameter. In all cases maximum likelihood estimates from the unconstrained optimisation coincide with the maximum along the profile.}
+        \caption[Profile likelihood analysis for the approximate models]{Profile likelihood analysis for: \textbf{(a)} the risk based approximate model, and \textbf{(b)} the space based approximate model. The offsets ($1.137\times10^6$ for \textbf{(a)} and $9.583\times10^5$ for \textbf{(b)}) must be added to all values on the y axes. The profile for every parameter crosses the 95\% confidence interval threshold, ensuring identifiability of each parameter. In all cases maximum likelihood estimates from the unconstrained optimisation coincide with the maximum along the profile.}
         \label{fig:profile_lik}
     \end{center}
 \end{figure}
@@ -234,7 +234,7 @@ To fully compare open-loop and MPC we must run the simulations repeatedly to acc
 \begin{figure}[t!]
     \begin{center}
         \includegraphics[width=0.75\textwidth]{Graphics/Ch4/Risk_Split_Scan}
-        \caption{Scan of objective values for 1000 simulations, varying the proportion of control that is allocated to the high risk group. Remaining control is allocated to the low risk group. The optimal allocation to the high risk group is found to be 63\%. Deciles in the objectives are shown by the gradient in colour.}
+        \caption[Optimisation of the Split strategy]{Scan of objective values for 1000 simulations, varying the proportion of control that is allocated to the high risk group. Remaining control is allocated to the low risk group. The optimal allocation to the high risk group is found to be 63\%. Deciles in the objectives are shown by the gradient in colour.}
         \label{fig:ch4:risk_split_scan}
     \end{center}
 \end{figure}
@@ -250,7 +250,7 @@ We first look at the OCT results from optimisation on the two approximate models
 \begin{figure}[h]
     \begin{center}
         \includegraphics[width=0.75\textwidth]{Graphics/Ch4/OL_Control_Comparison}
-        \caption{Comparison of optimal control strategies in the approximate models. \textbf{(a)} shows the optimal allocation of control resources to high and low risk groups in the risk based approximate model. \textbf{(b)} shows the equivalent for the space based approximate model. This allocation is broken down further in \textbf{(c)}, showing the distribution across regions and risk groups for the space based model.}
+        \caption[Optimised time-dependent control strategies]{Comparison of optimal control strategies in the approximate models. \textbf{(a)} shows the optimal allocation of control resources to high and low risk groups in the risk based approximate model. \textbf{(b)} shows the equivalent for the space based approximate model. This allocation is broken down further in \textbf{(c)}, showing the distribution across regions and risk groups for the space based model.}
         \label{fig:ch4:opt_control_comparison}
     \end{center}
 \end{figure}
@@ -262,7 +262,7 @@ Next we compare the different control scenarios applied to the simulation model.
 \begin{figure}[h]
     \begin{center}
         \includegraphics[width=\textwidth]{Graphics/Ch4/OL_MPC_Comparison}
-        \caption{In \textbf{(a)} the control allocation is shown for a single space based MPC run, with the corresponding open-loop allocation indicated by the black dotted line. \textbf{(b)} shows the total number of infected individuals under a single run of space based open-loop control. Control is based on the prediction of the approximate model starting from the initial conditions. \textbf{(c)} shows the number of infected individuals in the simulation and space based approximate model corresponding to the MPC control carried out in \textbf{(a)}. Here the prediction is reset to match the simulation at every update step (0.5 time units) and the control is re-optimised. By repeatedly correcting for differences between short-term model predictions and realised numbers of infected individuals -- rather than relying on a potentially increasingly inaccurate prediction made at the initial time -- MPC gives better predictions of the simulation state as well as improved control when compared to open-loop (note different y axis scales).}
+        \caption[Comparing open-loop and MPC optimal strategies]{In \textbf{(a)} the control allocation is shown for a single space based MPC run, with the corresponding open-loop allocation indicated by the black dotted line. \textbf{(b)} shows the total number of infected individuals under a single run of space based open-loop control. Control is based on the prediction of the approximate model starting from the initial conditions. \textbf{(c)} shows the number of infected individuals in the simulation and space based approximate model corresponding to the MPC control carried out in \textbf{(a)}. Here the prediction is reset to match the simulation at every update step (0.5 time units) and the control is re-optimised. By repeatedly correcting for differences between short-term model predictions and realised numbers of infected individuals -- rather than relying on a potentially increasingly inaccurate prediction made at the initial time -- MPC gives better predictions of the simulation state as well as improved control when compared to open-loop (note different y axis scales).}
         \label{fig:ch4:ol_mpc_comparison}
     \end{center}
 \end{figure}
@@ -272,7 +272,7 @@ For each control scenario we run the simulation model 250 times to generate a di
 \begin{figure}[h]
     \begin{center}
         \includegraphics[width=0.75\textwidth]{Graphics/Ch4/Obj_Values}
-        \caption{Results of different control optimisation schemes on the illustrative simulation model. Spatial MPC performs best, showing an improvement over both open-loop and user-defined strategies.}
+        \caption[Comparing control strategy performance on the network model]{Results of different control optimisation schemes on the illustrative simulation model. Spatial MPC performs best, showing an improvement over both open-loop and user-defined strategies.}
         \label{fig:ch4:obj_values}
     \end{center}
 \end{figure}
@@ -333,7 +333,7 @@ For $\rho_{\mathrm{hom}}$, the more homogeneous case, we find that the order of 
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.75\textwidth]{Graphics/Ch4/Rho_Homo}
-        \caption{Results of control optimisation scenarios with alternative, more homogeneous risk structure $\rho_{\mathrm{hom}}$.}
+        \caption{Control strategy performance with more homogeneous risk structure}{Results of control optimisation scenarios with alternative, more homogeneous risk structure $\rho_{\mathrm{hom}}$.}
         \label{fig:ch4:rho_homo}
     \end{center}
 \end{figure}
@@ -341,7 +341,7 @@ For $\rho_{\mathrm{hom}}$, the more homogeneous case, we find that the order of 
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.75\textwidth]{Graphics/Ch4/Rho_Hetero}
-        \caption{Results of control optimisation scenarios with alternative, more heterogeneous risk structure $\rho_{\mathrm{het}}$.}
+        \caption[Control strategy performance with more heterogeneous risk structure]{Results of control optimisation scenarios with alternative, more heterogeneous risk structure $\rho_{\mathrm{het}}$.}
         \label{fig:ch4:rho_hetero}
     \end{center}
 \end{figure}
@@ -351,7 +351,7 @@ We now consider the second effect, namely relative performance of each strategy 
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.75\textwidth]{Graphics/Ch4/Rho_Relative}
-        \caption{Mean performance of each control strategy using all three risk structures.}
+        \caption[Comparing control performance across risk structures]{Mean performance of each control strategy using all three risk structures.}
         \label{fig:ch4:rho_relative}
     \end{center}
 \end{figure}
