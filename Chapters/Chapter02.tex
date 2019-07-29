@@ -6,18 +6,20 @@
 
 In Chapter~\ref{ch:intro} we highlighted how the optimisation of plant disease management can be mathematically and computationally challenging. In this chapter we will introduce the mathematical field of optimal control theory (OCT), and how it can be used to optimise epidemiological controls. Poorly designed management strategies can lead to expensive failures of control, for example as happened with Dutch elm disease in the UK in the 1970s \citep{tomlinson_too_2010}, and with citrus canker in Florida in the 2000s \citep{gottwald_citrus_2007}. OCT provides a framework for finding time dependent, optimal strategies for simple models, which could be used to systematically generate potential management strategies for use in the real-world. Alongside expert-informed strategies this could enable a more mathematically robust system for making disease management policy decisions.
 
-In this chapter we review the use of OCT in the epidemiology literature. We first describe the formulation of problem that OCT can solve, and give an overview of the mathematical background. We focus here on a review of applications of OCT in epidemiology and related fields, rather than the underlying mathematical theory. We then describe two main numerical methods that are commonly used to find solutions to the optimal control problem, before analysing the differences between them using a simple disease model in the next chapter.
+In this chapter we review the use of OCT in the epidemiology literature. We first describe the formulation ofthe optimal control problem, and give an overview of the mathematical background. We focus here on a review of applications of OCT in epidemiology and related fields, rather than the underlying mathematical theory. We then describe two main numerical methods that are commonly used to find solutions to the optimal control problem, to set the scene for analysing the differences between them using a simple disease model in the next chapter.
 
 \section{Background}\label{sec:ch2:background}
 
-Optimal control theory (OCT) is the field of mathematics concerned with finding time-varying inputs to dynamic systems, optimised to maximise (or minimise) some performance metric. The dynamical system could be a system of ODEs, PDEs, or discrete difference equations, controlled by an input variable, or combination of variables, that can be varied from outside the system. The field developed as an extension to the calculus of variations, with roots also in classical control theory, random processes, and linear and nonlinear programming \citep{bryson_optimal_1996}. In the 1950s, Bellman developed dynamic programming, a method for finding optimal controls by recursively solving smaller problems \citep{bellman_dynamic_1957}. These methods struggle to solve realistic problems because of the `curse of dimensionality', where as the number of state and control variables increases, the memory required to solve the recursive problem becomes impractical.
+Optimal control theory (OCT) is the field of mathematics concerned with finding time-varying inputs to dynamic systems, optimised to maximise (or minimise) some performance metric. Whilst the standard approach applies to ODEs,  the dynamical system could also be a system of PDEs, or difference equations. The system is controlled by an input variable, or combination of variables, that can be varied from outside the system to adjust the dynamics. The field developed as an extension to the calculus of variations, with roots also in classical control theory, random processes, and linear and nonlinear programming \citep{bryson_optimal_1996}. In the 1950s, Bellman developed dynamic programming, a method for finding optimal controls by recursively solving smaller problems \citep{bellman_dynamic_1957}. These methods struggle to solve realistic problems because of the `curse of dimensionality', where as the number of state and control variables increases, the memory required to solve the recursive problem becomes impractical.
 
-Later work by \citet{pontryagin_mathematical_1962} extended work from the calculus of variations to find a necessary condition for the maximising path. This method explores extremal paths individually and so avoids dimensionality issues. This condition is contained in Pontryagin's famous `maximum principle', the main theory underlying much of OCT. We will now summarise this principle but we do not describe the mathematics here. Further details can be found in \citet{lenhart_optimal_2007} or \citet{hocking_optimal_1991}. The maximum principle relates to a differential equation system for a state vector $\vect{x}$, described as follows:
-\begin{equation}
+Later work by \citet{pontryagin_mathematical_1962} extended work from the calculus of variations to find a necessary condition for the maximising path. Since whether an individual control-state trajectory satisfies the condition can be tested, this method avoids the `curse of dimensionality' with the Bellman equation. There is no need to recurse over the entire state space. The necessary condition is contained in Pontryagin's famous `maximum principle', the main theory underlying much of OCT. We will now summarise this principle but we do not describe the mathematics here. Further details can be found in \citet{lenhart_optimal_2007} or \citet{hocking_optimal_1991}.
+
+The maximum principle relates to a differential equation system for a state vector $\vect{x}$, described as follows:
+\begin{equation}\label{eqn:ch2:state_system}
     \dot{\vect{x}}(t) = \vect{f}(\vect{x}(t), \vect{u}(t), t);\quad{}\vect{x}(0)=\vect{x}_0;\quad{}t\in{}\left[0, T\right]
 \end{equation}
-where $\vect{u}(t)$ is a time dependent control vector. The control function $\vect{u}(t)$ must be chosen so as to maximise the objective function $J$:
-\begin{equation}
+where $\vect{u}(t)$ is a time dependent control vector. The control function $\vect{u}(t)$ must be chosen in order to maximise the objective function $J$:
+\begin{equation}\label{eqn:ch2:objective}
     J = \Psi{}(\vect{x}(T)) + \int_0^TL(\vect{x}(t), \vect{u}(t), t)\,\mathop{dt}
 \end{equation}
 where $\Psi$ is a salvage term, or payoff function, and $L$ is the Lagrangian of the problem. The overall optimisation problem is therefore:
@@ -28,10 +30,11 @@ where $\Psi$ is a salvage term, or payoff function, and $L$ is the Lagrangian of
         &\null \vect{x}(0)=\vect{x}_0 \label{eqn:ch2:opt_problem_c}
     \end{align}
 \end{subequations}
+where the state dynamics are constraints to the maximisation problem.
 
-The maximum principle states that if $\vect{u}^*(t)$ and $\vect{x}^*(t)$ are optimal for this system, then there must exist an adjoint system $\vect{\lambda}(t)$ such that:
+The maximum principle states that if $\vect{u}^*(t)$ and $\vect{x}^*(t)$ are optimal for this system, then there must exist an adjoint system of variables $\vect{\lambda}(t)$ such that:
 \begin{equation}
-    H(t, \vect{x}^*(t), \vect{u}(t), \vect{\lambda}(t)) \leq H(t, \vect{x}^*(t), \vect{u}^*(t), \vect{\lambda}(t))
+    H(t, \vect{x}^*(t), \vect{u}(t), \vect{\lambda}^*(t)) \leq H(t, \vect{x}^*(t), \vect{u}^*(t), \vect{\lambda}^*(t))
 \end{equation}
 for all time $t \in \left[0, T\right]$. The Hamiltonian $H$ is given by:
 \begin{equation}\label{eqn:ch2:hamiltonian_general}
@@ -44,35 +47,77 @@ and the adjoint system satisfies:
         \vect{\lambda}(T) &= \frac{\partial \Psi(\vect{x}(T))}{\partial \vect{x}}\;. \label{eqn:ch2:adjoint_system_b}
     \end{align}
 \end{subequations}
-The terminal constraint in the adjoint system is known as the transversality condition. This maximum principle can then be used to find solutions to the optimisation problem described above. We next look at how this framework has been used in epidemiology.
+
+The adjoint system is a set of time-dependent variables that are equivalent to Lagrange multipliers. In economic terms they are shadow prices, representing the cost in the objective function associated with a change in the relevant state variable. This is useful in the maximisation problem as, through maximisation of the Hamiltonian, the adjoint system sets the relative importance of the control functions. The terminal constraint in the adjoint system is known as the transversality condition. 
+
+This maximum principle can then be used to find solutions to the optimisation problem described above. In Example~\ref{example:ch2:sir_setup} we illustrate this problem formulation for a simple SIR model, before reviewing how OCT has been used in epidemiology in the next section. 
+
+\begin{example}[Setting up a simple SIR optimal control problem.\label{example:ch2:sir_setup}]
+    As a more concrete illustration of how the problem formulation can be applied in an epidemiological setting, we here formulate the optimal control problem for a simple SIR model. The model tracks numbers of susceptible and infectious individuals, and the control consists of removing infected hosts (roguing). The state system (Equation~\ref{eqn:ch2:state_system} previously) is given by:
+    \begin{subequations}
+        \begin{align}
+            \dot{S} &= -\beta{}SI\\
+            \dot{I} &= \beta{}SI - \mu(t)I
+        \end{align}
+    \end{subequations}
+    where $\beta$ is the infection rate, and $\mu(t)$ is the time dependent roguing rate. In the mathematical formulation this is $u(t)$.
+
+    We seek to find an optimal roguing strategy ($\mu^*(t)$) that minimises the number of infected hosts after the final time $T$, combined with the total cost of roguing. The objective we choose is given by:
+    \begin{equation}
+        J = I(T) + \int_0^Tc\mu(t)I\,\mathop{dt}
+    \end{equation}
+    where $c$ is the relative cost of roguing. Comparing with Equation~\ref{eqn:ch2:objective}, the salvage term is $I(T)$, and the Lagrangian is the roguing cost $c\mu(t)I$. Note here that this is a minimisation problem, but the framework is exactly the same as for the maximisation problem considered previously, apart from the Hamiltonian being minimised when the control is optimal.
+
+    The Hamiltonian is formed by introducing adjoint variables for each state in the system. We define these as $\lambda_S$ and $\lambda_I$ for $S$ and $I$ respectively. Using Equation~\ref{eqn:ch2:hamiltonian_general} the Hamiltonian is found to be:
+    \begin{equation}\label{eqn:ch2:example_hamiltonian}
+        H = c\mu(t)I + \lambda_S(-\beta{}SI) + \lambda_I(\beta{}SI - \mu(t)I)\;.
+    \end{equation}
+
+    Using Equation~\ref{eqn:ch2:adjoint_system}(a), differentiating the Hamiltonian with respect to each state variable gives the dynamics of the adjoint variables:
+    \begin{subequations}
+        \begin{align}
+            \dot{\lambda}_S &= \lambda_S\beta{}I - \lambda_I\beta{}I\\
+            \dot{\lambda}_I &= -c\mu(t) + \lambda_S\beta{}S - \lambda_I\left(\beta{}S - \mu(t)\right)\;.
+        \end{align}
+    \end{subequations}
+    The optimal control problem is completed by the transversality constraints. These give the terminal time conditions for the adjoint variables. Using Equation~\ref{eqn:ch2:adjoint_system}(b) and the payoff term we have already defined, these are given by:
+    \begin{subequations}
+        \begin{align}
+            \lambda_S(T) &= 0\\
+            \lambda_I(T) &= 1\;.
+        \end{align}
+    \end{subequations}
+
+    This completes the formulation of the optimal control problem. We have a state system with initial conditions, an adjoint system with terminal conditions, and a Hamiltonian that is minimised when the roguing strategy is optimal. We will demonstrate how to solve this problem later in the chapter.
+\end{example}
 
 \section{OCT within epidemiology}\label{sec:ch2:oct_in_epidem}
 
-When deciding how to manage human, animal or plant epidemics, public health or environmental officials must take into account economic constraints. OCT optimises control strategies whilst ensuring adherence to constraints and minimisation of total costs, and is therefore a useful tool for designing epidemic interventions. Successful disease control relies on applying the most effective control methods at the correct time, and at a sufficient level. OCT is an effective tool for balancing disease management objectives with economic and logistic constraints, provided that the overall goal of the management program is well defined. OCT has been applied to models of many diseases, including HIV \citep{kirschner_optimal_1997}, mosaic virus in \emph{Jatropha curcas} plants \citep{al_basir_impact_2017}, and sudden oak death \citep{ndeffo_mbah_optimization_2010}. In this section we will review how OCT has developed within the field of epidemiology, discussing outstanding limitations and problems.
+When deciding how to manage human, animal or plant epidemics, public health or environmental officials must take into account economic constraints. OCT optimises control strategies whilst ensuring adherence to constraints and minimisation of total costs, and is therefore a potentially useful tool for designing epidemic interventions. Successful disease control relies on applying the most effective control methods at the correct time, and at a sufficient level. OCT is an effective tool for balancing disease management objectives with economic and logistic constraints, provided that the overall goal of the management program is well defined. OCT has been applied to models of many diseases, including HIV \citep{kirschner_optimal_1997}, mosaic virus in \emph{Jatropha curcas} plants \citep{al_basir_impact_2017}, and sudden oak death \citep{ndeffo_mbah_optimization_2010}. In this section we will review how OCT has developed within the field of epidemiology, discussing outstanding limitations and problems.
 
 \subsubsection{Early work \& general principles}
 
-Early work using OCT on epidemiological models was carried out by \citet{sethi_optimal_1978}, who optimised levels of vaccination and treatment in simple SEIR type models. The work is analytic and finds cases where the control can be classified as `bang-bang'. Bang-bang controls occur when the Hamiltonian (Equation~\ref{eqn:ch2:hamiltonian_general}) is linear in the control functions. The optimal control then switches between its maximum and minimum values giving so-called bang-bang strategies, where each control is either on or off. In bang-bang strategies there are often important switching times, when some or all of the controls switch from on to off or vice versa. These strategies have arisen repeatedly in disease control, for example by \citet{forster_optimizing_2007} for a plant disease spreading through an agricultural landscape, and \citet{panetta_optimal_2003} for cancer drug treatments.
+Early work using OCT on epidemiological models was carried out by \citet{sethi_optimal_1978}, who optimised levels of vaccination and treatment in simple SEIR type models. The work is analytic and finds cases where the control can be classified as `bang-bang'. Bang-bang controls occur when the state dynamics and the Lagrangian, and so the Hamiltonian (Equation~\ref{eqn:ch2:hamiltonian_general}), are linear in the control functions. The Hamiltonian is then maximised (or minimised) by controls that switch between their maximum and minimum values, giving the so-called bang-bang strategies, where each control is either on or off. In bang-bang strategies there are often important switching times, when some or all of the controls switch from on to off or vice versa. These strategies have arisen repeatedly in disease control, for example by \citet{forster_optimizing_2007} for a plant disease spreading through an agricultural landscape, and \citet{panetta_optimal_2003} for cancer drug treatments.
 
-As OCT was increasingly used within epidemiology, the underlying models increased in complexity. \citet{behncke_optimal_2000} developed models with more complex forms of control, including vaccination, quarantine and screening, and health-promotion campaigns. The interventions modelled are more realistic than those used in previous studies, but the models are analytic and abstract in nature. The models are not specific to the form of the force of infection, so that the results are valid in the general case. The control strategies found here introduce the concept of `front-loading', where additional resources are allocated early in the epidemic when control can be more effective. The importance of this early timing of control for successful management has also been shown for control of sudden oak death \citep{cunniffe_modelling_2016}.
+As OCT was increasingly used within epidemiology, the underlying models increased in complexity. \citet{behncke_optimal_2000} developed models with more complex forms of control, including vaccination, quarantine and screening, and health-promotion campaigns. The wider range of interventions modelled are more realistic than those used in previous studies, but the models are analytic and abstract in nature. The models use a general infection interaction $f(S, I)$, so that the results are valid in the general case for frequency or density dependence, or any other interaction term. As well as this, the effects of screening and health-promotion campaigns are also included through generic functions, so do not capture any specific method of control. The control strategies found here introduce the concept of `front-loading', where additional resources are allocated early in the epidemic when control can be more effective. The importance of this early timing of control for successful management has also been shown for control of sudden oak death \citep{cunniffe_modelling_2016}.
 
 \subsubsection{Bioeconomics}
 
 Throughout its history, OCT has been closely connected with the field of economics \citep{weber_optimal_2011}, for example in fisheries economics \citep{clark_economics_1975}. Consideration of economics is important for optimising epidemiological controls \citep{perrings_merging_2014}, since interventions must be cost-effective, and resources are often limited. In one study, OCT was used to find cost-effective human papillomavirus vaccination strategies \citep{brown_role_2011}, showing how time-dependent strategies can be found that balance the costs of administering vaccines with the costs of treating infected individuals. In plant epidemiology, a recent study shows how control strategies for vector transmitted diseases can balance multiple economic costs \citep{bokil_optimal_2019}, including control costs, yield loss and long term costs from insecticide use. Work on sudden oak death has shown how OCT can find an optimal balance when allocating limited resources between surveillance and eradication measures \citep{ndeffo_mbah_balancing_2010}.
 
-Bioeconomic studies such as the ones considered in the previous paragraph, rely on a clearly defined objective of control, with all costs quantified in the same units. By setting the relative contributions for each cost term, for example surveillance, vaccination and treatment costs, the objective function chosen defines what is to be considered cost-effective. \citet{epanchin-niell_economics_2017} argues that in bioinvasion management a key gap in current understanding is how to value environmental benefits, such as ecosystem services and biodiversity, alongside the costs and effectiveness of controls. The same difficulties are present in the epidemiological literature. Choosing an objective function that balances costs meaningfully is important though, since the choice of the objective function can make significant changes to the optimal strategy \citep{probert_decision_2016}. In human disease, cost-effectiveness analyses are often based on quality adjusted life years \citep{whitehead_health_2010}. A similar concept could perhaps be used for plant and animal diseases, including calculations of yield losses \citep{savary_crop_2012, savary_global_2019} as well as effects on welfare, biodiversity and tourism for example \citep{boyd_consequence_2013}.
+Bioeconomic studies such as the ones considered in the previous paragraph, rely on a clearly defined objective of control, with all costs quantified in the same units. By setting the relative contributions for each cost term, for example surveillance, vaccination and treatment costs, the objective function chosen defines what is to be considered cost-effective. \citet{epanchin-niell_economics_2017} argues that in bioinvasion management a key gap in current understanding is how to value environmental benefits, such as ecosystem services and biodiversity, alongside the costs and effectiveness of controls. The same difficulties are present in the epidemiological literature. However, choosing an objective function that balances costs meaningfully is important, since the choice of the objective function can make significant changes to the optimal strategy \citep{probert_decision_2016}. In human disease, cost-effectiveness analyses are often based on quality adjusted life years \citep{whitehead_health_2010}. A similar concept could perhaps be used for plant and animal diseases, including calculations of yield losses \citep{savary_crop_2012, savary_global_2019} as well as effects on welfare, biodiversity and tourism for example \citep{boyd_consequence_2013}.
 
 \subsubsection{State of the art and outstanding questions}
 
 As the use of OCT in epidemiology progressed, the complexity of the underlying control models increased to capture more realism and ask more applied questions. As examples, OCT has been used in models of vector-borne diseases applied to malaria \citep{blayneh_optimal_2009}, vaccination rates against \emph{Clostridium difficile} in a hospital setting \citep{stephenson_optimal_2017}, and, as previously mentioned, balancing of detection and eradication controls for sudden oak death \citep{ndeffo_mbah_balancing_2010}. Despite the additional complexity and realism, the underlying models in these and other studies are still relatively simplistic, and cannot be expected to capture complex realistic dynamics. OCT results have therefore rarely been tested in the field.
 
-Occasionally, though, OCT results have been tested using more complex models to relax the assumptions in the simplistic OCT models. \citet{forster_optimizing_2007} find that in a mean field epidemic model a switching strategy is optimal. \citeauthor{forster_optimizing_2007} also test their mean field results on a spatial contact process model, and find that if the switch time is not known precisely then the OCT strategy can be worse than a simple constant strategy. Another study finds optimal control strategies for chlamydia, and tests the non-spatial results on a spatial network simulation \citep{clarke_approximating_2013}. The strategies found using OCT result in rapidly switching controls that perform much worse in the simulation model than in the OCT model. For effective control in the real world then, the OCT model should be constrained to avoid these rapid switches. Whilst a few examples do test OCT results on more realistic systems, this is by far not the norm, and understanding how epidemiological OCT results can be mapped to the real world is a significant gap in the literature.
+Occasionally, though, OCT results have been tested using more complex models to relax the assumptions in the simplistic OCT models. \citet{forster_optimizing_2007} find that in a mean field epidemic model a switching strategy is optimal. \citeauthor{forster_optimizing_2007} also test their mean field results on a spatial contact process model, and find that if the switch time is not known precisely then the OCT strategy can be worse than a simple constant strategy. Another study finds optimal control strategies for chlamydia, and tests the non-spatial results on a spatial network simulation \citep{clarke_approximating_2013}. The strategies found using OCT result in rapidly switching controls that perform much worse in the simulation model than in the OCT model. For effective control in the real world then, in this study the OCT model should be constrained to avoid these rapid switches. Whilst a few examples do test OCT results on more realistic systems, this is by far not the norm, and understanding how epidemiological OCT results can be mapped to more realistic models, or even the real world, is a significant gap in the literature.
 
 Within plant epidemiology, the effect of space is highly important in both modelling the spread of disease, and designing effective management strategies \citep{ostfeld_spatial_2005, plantegenest_landscape_2007}. Some OCT studies have used simple metapopulation models to capture some element of spatial dynamics. \citet{ndeffo_mbah_optimal_2014} optimise control on a one-dimensional lattice, showing that optimal control tracks the wavefront of a spreading epidemic. An alternative approach to finding optimal spatial strategies is to use partial differential equation (PDE) models, as used by \citet{neilan_optimal_2011} for a model of rabies in raccoons. Other studies resort to simple epidemiological models and optimisations, for example \citet{epanchin_optimal_2012} use a nearest neighbour spread model. The spread model is formulated as an inequality system, allowing the control optimisation to be carried out using integer programming. Spatial control strategies can be difficult to optimise, but use of simpler models could result in strategies that are not robust when additional realism is included. Without explicit testing of the OCT strategies on a realistic spatial model, how can a policy maker be sure the strategies are robust?
 
 \section{Optimisation methods}\label{sec:ch2:optim_methods}
 
-There are many numerical methods for solving the optimisation problem described in Equations~\ref{eqn:ch2:opt_problem} (p.~\pageref{eqn:ch2:opt_problem}). These methods can be grouped into two main classes: indirect and direct methods. Indirect methods find roots of the necessary condition given by the Pontryagin maximum principle, whereas direct methods find a sequence of controls that minimise the objective function without using the adjoint system \citep{betts_practical_2010}. We will briefly describe a formulation using each of these methods, but refer to \citet{betts_practical_2010} for a comprehensive discussion of numerical methods for optimal control problems.
+There are many numerical methods for solving the optimisation problem described in Equations~\ref{eqn:ch2:opt_problem} (p.~\pageref{eqn:ch2:opt_problem}). These methods can be grouped into two main classes: indirect and direct methods. Indirect methods find roots of the necessary condition given by the Pontryagin maximum principle, i.e.\ state-control trajectories that satisfy the necessary condition. Direct methods on the other hand, find a sequence of controls that minimise the objective function without using the adjoint system \citep{betts_practical_2010}. We will briefly describe a formulation using each of these methods, but refer to \citet{betts_practical_2010} for a comprehensive discussion of numerical methods for optimal control problems. Example~\ref{example:ch2:sir_solve} continues the previous example, showing how the system can be optimised using the direct and indirect methods.
 
 \subsection{Indirect formulation}
 
@@ -80,7 +125,7 @@ Indirect methods construct the necessary conditions given by the Pontryagin maxi
 
 More specifically, since the initial conditions for the state system, and the terminal conditions for the adjoint system are known (Equations~\ref{eqn:ch2:opt_problem_c} and \ref{eqn:ch2:adjoint_system_b}, p.~\pageref{eqn:ch2:opt_problem_c}), then the necessary conditions become a two point boundary problem. This state-adjoint system will be solved when the control function is optimal ($\vect{u}^*(t)$). The forward-backward sweep method (FBSM) is a simple numerical algorithm for solving this formulation of the optimal control problem \citep{lenhart_optimal_2007}. The method is described in Algorithm~\ref{alg:ch2:fbsm}.
 
-The FBSM is based in the necessary conditions for optimality. This means that the results are closely connected to the underlying mathematics of the optimal control theory. This can help to give more insight into the meaning of the resulting controls, since the underlying dynamics that influence the control are analytically described. There are however, a number of limitations to using the indirect formulation. Firstly, this close connection to the optimality conditions means that significant work is necessary to set up the optimisation problem. The Hamiltonian, adjoint dynamics, and transversality conditions must all be derived. This can be mathematically challenging, and is inherently inflexible since the equations must be derived for each new problem \citep{betts_practical_2010}. Further to this, there can be issues with the convergence of the FBSM. The convergence can be highly sensitive to the initial guess for the optimal control, and the method may never converge to a solution.
+The FBSM is based in the necessary conditions for optimality. This means that the results are closely connected to the underlying mathematics of the optimal control theory. This can help to give more insight into the meaning of the resulting controls, since the underlying dynamics that influence the control are analytically described. In some cases this may help to make general statements about the nature of optimal control that could lead to a rule of thumb. For example, \citet{sethi_optimal_1978} showed that there can be at most a single switch in the optimal strategy, a general statement that could not be found from numerical solutions. There are however, a number of limitations to using the indirect formulation. Firstly, this close connection to the optimality conditions means that significant work is necessary to set up the optimisation problem. The Hamiltonian, adjoint dynamics, and transversality conditions must all be derived. This can be mathematically challenging, and is inherently inflexible since the equations must be derived for each new problem \citep{betts_practical_2010}. Further to this, there can be issues with the convergence of the FBSM. The convergence can be highly sensitive to the initial guess for the optimal control, and the method may never converge to a solution \citep{betts_practical_2010}.
 
 \begin{algorithm}[h]
     \caption{The forward-backward sweep method (FBSM) algorithm from \citet{lenhart_optimal_2007}, for solving optimal control problems using the indirect formulation.\label{alg:ch2:fbsm}}
@@ -95,7 +140,7 @@ The FBSM is based in the necessary conditions for optimality. This means that th
 
 \subsection{Direct formulation}
 
-The direct formulation differs from the indirect in that it does not rely on the derivation of the Hamiltonian or adjoint system. Direct formulation methods discretise the dynamic system first, and then optimise this, rather than optimising using the optimality conditions. One method for solving a direct formulation problem is the direct transcription process. This method discretises the state and control in time, and treats the values of the state and control at these discrete times as optimisation variables in a nonlinear programming (NLP) problem. Within the NLP problem, the state dynamics and initial conditions are included as constraints on the NLP variables, and the optimisation is carried out to minimise the objective value.
+The direct formulation differs from the indirect in that it does not rely on the derivation of the Hamiltonian or adjoint system. Direct formulation methods discretise the dynamic system first, and then optimise that, rather than optimising using the optimality conditions. One method for solving a direct formulation problem is the direct transcription process. This method discretises the state and control in time, and treats the values of the state and control at these discrete times as optimisation variables in a nonlinear programming (NLP) problem. Within the NLP problem, the state dynamics and initial conditions are included as constraints on the NLP variables, and the optimisation is carried out to minimise the objective value.
 
 Whilst it may seem excessive to be directly optimising all the state variables, because each variable only directly influences variables that are close in time the problem becomes large but sparse. This sparsity can be exploited by numerical optimisation routines, and is often simpler to solve than a small, dense problem in which the state is not discretised and optimised \citep{betts_practical_2010}. The state dynamics constraints are constructed as a discretisation of the state ODE system, often using an implicit Runge-Kutta scheme. For example, following the standard approach in \citet{betts_practical_2010}, if the state-control system is discretised on $M$ grid points, the NLP variables are given by:
 \begin{equation}
@@ -103,11 +148,81 @@ Whilst it may seem excessive to be directly optimising all the state variables, 
 \end{equation}
 Using an Euler discretisation scheme, the state ODEs ($\dot{\vect{x}} = \vect{f}(\vect{x}, \vect{u}, t)$) can be approximated by the following NLP constraints:
 \begin{equation}
-    \vect{0} = \vect{x}_{k+1} - \vect{x}_k - \frac{h_k}{2}\left(\vect{f}_{k+1} + \vect{f}_k\right) \equiv \vect{c}(\vect{y})
+    \vect{0} = \vect{x}_{k+1} - \vect{x}_k -h_k\vect{f}_k \equiv \vect{c}(\vect{y})
 \end{equation}
 The NLP variables $\vect{y}$ are then optimised subject to the constraints $\vect{c}(\vect{y})$ using an NLP solver.
 
-The advantages of the direct over the indirect formulation are in its flexibility and robustness. Since the Hamiltonian and adjoint are not required, and gradients can be estimated using finite differences, the method can be used for any system without analytic derivatives. Furthermore, there is extensive literature and software available for solving large, sparse NLP problems. This means the optimisations can be fast, efficient and robust. Whilst the method does still require an initial guess for both the control and the state variables, the NLP problem has a much larger region of convergence than the root finding in indirect methods \citep{betts_practical_2010}.
+The advantages of the direct over the indirect formulation are in its flexibility and robustness. Since the Hamiltonian and adjoint are not required, and gradients can be estimated using finite differences, the method can be used for any system without analytic derivatives. Furthermore, there is extensive literature and software available for solving large, sparse NLP problems. This means the optimisations can be fast, efficient and robust. Whilst the method does still require an initial guess for both the control and the state variables, the NLP problem has a much larger region of convergence than the root finding in indirect methods \citep{betts_practical_2010}. Note that neither the direct nor the indirect method guarantee a globally optimal solution, and using different initial estimates of the optimal control in the optimisation process can converge to different solutions. Different solutions can be compared to find the optimal strategy.
+
+\begin{example}[Applying the indirect and direct formulations to the simple SIR model.\label{example:ch2:sir_solve}]
+    In Example~\ref{example:ch2:sir_setup} we formulated the optimal control problem for roguing in a simple SIR model. Here we will numerically solve this problem, using both indirect and direct methods. First, as a reminder, the optimal control problem was given by:
+    \begin{subequations}
+        \begin{align}
+            \min_{\mu(t)} \quad{} J &= I(T) + \int_0^Tc\mu(t)I\,\mathop{dt}\\
+            \text{subject to} \quad{} \dot{S} &= -\beta{}SI\\
+            \dot{I} &= \beta{}SI - \mu(t)I\;.
+        \end{align}
+    \end{subequations}
+    We use the initial conditions of $S(0)=99$ and $I(0)=1$, and the parameterisation $\beta{}=$\SI{0.1}{\per\host\per\t}, $c=1.2$, and we set a maximum roguing rate $\mu_\text{max}$ of \SI{3}{\per\t}.
+
+    \subsubsection{Indirect method}
+    First we solve the problem above using the FBSM described in Algorithm~\ref{alg:ch2:fbsm}. In Example~\ref{example:ch2:sir_setup} we derived the adjoint system dynamics and terminal conditions, and the Hamiltonian. The FBSM solves the state dynamics forward in time from the initial conditions, then uses this state to solve the adjoint dynamics backwards in time from the terminal conditions. The adjoint dynamics were given by:
+    \begin{subequations}
+        \begin{align}
+            \dot{\lambda}_S &= \lambda_S\beta{}I - \lambda_I\beta{}I\\
+            \dot{\lambda}_I &= -c\mu(t) + \lambda_S\beta{}S - \lambda_I\left(\beta{}S - \mu(t)\right)\;.
+        \end{align}
+    \end{subequations}
+
+    The state and adjoint values are then used to minimise the Hamiltonian from Equation~\ref{eqn:ch2:example_hamiltonian}. Because the Hamiltonian is linear in the controls, it is minimised by the following control:
+    \begin{equation}
+        \mu(t) = \begin{cases}
+            0 & \text{if }\lambda_I < c \\
+            \mu_\text{max} & \text{if }\lambda_I > c\;.
+        \end{cases}
+    \end{equation}
+    Note that if $\lambda_I=c$ the the control is singular, and undefined by the equations we have derived here. In some cases singular controls can be derived, but here this will not be necessary. We use an initial estimate of the roguing strategy to start the iterative FBSM. Here we use zero control at all times, i.e.\ $\mu(t)=0$. The results in Figure~\ref{fig:ch2:sir_indirect} show that the optimal control is bang-bang. Control is maximal for approximately \SI{90}{\percent} of the time. After this the benefits from roguing infected hosts are outweighed by the costs of control, and no further roguing is carried out.
+
+    {
+    \centering
+    \captionsetup{type=figure}
+        \includegraphics[width=0.95\textwidth]{Graphics/Ch2/Example_indirect}
+    \caption[Optimal roguing strategy using the indirect approach]{Solution to the optimal roguing problem using the FBSM approach. Control is initiated at zero, and in 39 iterations converges to a switching, bang-bang control as shown in \textbf{(a)}. \textbf{(b)} and \textbf{(c)} show the state and adjoint systems corresponding to the optimal control.\label{fig:ch2:sir_indirect}}
+    }
+
+    \subsubsection{Direct method}
+    Next we will show the solution to the same problem using the direct transcription method. First the state system and control must be discretised. Discretising onto $M+1$ grid points, we get the following variables to optimise:
+    \begin{equation}
+        \vect{y}^\mathrm{T} = \left(S_0, I_0, \mu_0, \ldots S_M, I_M, \mu_M\right)
+    \end{equation}
+    where:
+    \begin{equation}
+            S_i = S(t=iT/M)\;; \quad I_i = I(t=iT/M)\;; \quad \mu_i = \mu(t=iT/M)\;.
+    \end{equation}
+
+    The state dynamics are included as constraints to the minimisation. For simplicity we here use an Euler integration step between grid points:
+    \begin{subequations}
+        \begin{align}
+            S_{k+1} &= S_k + \frac{T}{M} \left(-\beta{}S_kI_k\right)\\
+            I_{k+1} &= I_k + \frac{T}{M} \left(\beta{}S_kI_k - \mu_kI_k\right)\;.
+        \end{align}
+    \end{subequations}
+    These equality constraints, as well as the initial conditions, are included in the minimisation of the objective, which is also discretised:
+    \begin{equation}
+        J = I_k + \sum_{j=0}^{M-1}c\mu_jI_j\frac{T}{M}\;.
+    \end{equation}
+    The Python minimize function from the SciPy library \citep{scipy} is used to perform the optimisation, and the results are shown in Figure~\ref{fig:ch2:sir_direct}. Both methods converge to the same optimal solution, but there are numerical inaccuracies in the direct method because of the simple discretisation scheme chosen here.
+
+    {
+        \vspace*{1cm}
+        \captionsetup{type=figure}
+        \centering \includegraphics[width=0.95\textwidth]{Graphics/Ch2/Example_direct}
+        \caption[Optimal roguing strategy using the direct approach]{Solution to the optimal roguing problem using the direct transcription approach. Dashed lines show the indirect solution found previously. Numerical inaccuracies in the Euler approximation used lead to small differences between the methods, but both approaches converge on the same solution. The direct method loses some accuracy, but does not require computation of the adjoint system or the Hamiltonian.\label{fig:ch2:sir_direct}}
+    }
+
+    The numerical inaccuracies here are due to the simple Euler discretisation, here used for illustration. In later chapters we use more accurate integration schemes, and as we will show in the next chapter, these significantly reduce the numerical differences between the methods.
+
+\end{example}
 
 \section{Conclusions}
 
