@@ -2,10 +2,242 @@
 %
 \chapter{Optimising spatial strategies to protect Redwood National Park\label{ch:redwood}}
 
+\section{Introduction}
+
+In this chapter we will extend the optimal control methods we have developed to manage SOD in a more complex, spatial setting. So far our application of OCT has identified strategies that are non-spatial, in the case of protecting tanoak in forest stands in Chapter~\ref{ch:protect_tanoak_control}, or of limited spatial detail, i.e.\ the three patch metapopulation models of Chapters \ref{ch:three_patch} and \ref{ch:complex_models}. Here we extend the setting to a continuous landscape and show how OCT can find spatially complex strategies that can more effectively control the spread of SOD\@. Plant disease management is most effective when the scale of control matches the scale of the epidemic \citep{gilligan_epidemiological_2008, gilligan_impact_2007}, meaning that necessarily control must depend on the pattern of invasion. Spatially optimising control can target key locations that could link multiple regions \citep{minor_landscape_2011}, or that if infected would lead to large epidemics \citep{hyatt-twynam_risk-based_2017}. Prioritising management based on host risk can improve management of plant diseases \citep{cunniffe_modelling_2016}, but also more broadly of animal \citep{tildesley_optimal_2006} and human diseases \citep{fraser_factors_2004}. How can OCT be used to design these strategies?
+
+As a case study, we use the 2010 SOD invasion along Redwood Creek, near to Redwood National Park in California. We will investigate how OCT can be used to identify spatial strategies that are designed to protect the national park from the impacts of SOD\@. With widespread control of SOD impossible \citep{cunniffe_modelling_2016}, designing the most effective strategies to protect valuable resources is essential. The strategies we identify will be compared with the control that was actually carried out, showing the benefit of using OCT for strategy design.
+
+\subsection{Redwood Creek sudden oak death outbreak}
+
+Redwood National Park is located on the coast of northwestern California, just south of the Oregon border (Figure~\ref{fig:ch7:map}(a)). The park was established in 1968 to protect redwoods from extensive logging, and the combined Redwood National and State Parks (RNSP) now contain \SI{45}{\percent} of old-growth redwood trees in California \citep{rnsp_website}. As well as redwoods the parks preserve the ancient ecosystem and natural biodiversity, conserving flora, fauna and natural features \citep{rnsp_website}. The area is also of importance to northwestern Californian Native Americans, with Hoopa and Yurok tribal lands nearby. Redwood Creek is a river passing through the national park, from the southern boundary up to Orick (Figure~\ref{fig:ch7:map}(b)).
+
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.95\textwidth]{Graphics/Ch7/StudyArea}
-        \caption[]{}
+        \caption[Redwood Creek study ares and SOD outbreak]{\label{fig:ch7:map}}
     \end{center}
 \end{figure}
 
+In May 2010 stream baiting near Orick identified the presence of \emph{P. ramorum} for the first time, over \SI{80}{\km} north of the nearest Californian SOD infestation \citep{valachovic_novel_2013}. Stream baiting places mesh bags containing rhododendron leaves that are susceptible to infection by the pathogen. The leaves are periodically tested for \emph{P. ramorum} presence in the laboratory and replaced with new leaves. The 2010 detection near Orick confirmed that SOD was present, but the location of the inoculum source could have been anywhere within the \SI{80937}{\hectare} watershed of Redwood Creek \citep{valachovic_novel_2013}. Because of the importance of the region, due to the proximity of RNSP, tribal lands and USDA FS lands, a large surveillance effort was carried out to identify the source, including additional stream baiting. In July 2010 the source was coincidentally found and confirmed as a small infestation in a residential area in Redwood Valley (Figure~\ref{fig:ch7:map}(b))\citep{valachovic_novel_2013}.
+
+Subsequent control of the infestation involved collaborations between public, private and tribal land managers, and resulted in changes to legislation to offset some of the management costs for commercial landowners \citep{valachovic_novel_2013}. The management carried out removed all infected trees, and all tanoak and bay laurel within \SI{100}{\meter} of the infected trees \citep{valachovic_novel_2013}. Over \SI{150}{\hectare} were treated with funding from a number of collaborators but, despite the unprecedented scale of the treatment efforts, weather conditions conducive to the pathogen and the short cull radius ultimately hampered the effectiveness of control \citep{valachovic_novel_2013}. The disease was discovered inside the national park in two locations in 2014 near Bridge Creek and Bond Creek \citep{stark_sudden_2014}. Management continues with the aim to protect the national park from further infestations.
+
+\subsection{Aims and key questions}
+
+In this chapter we will investigate how to use OCT to design spatial strategies to protect Redwood National Park. Using the open-loop framework previously developed we will test the strategies on a complex, spatially explicit model of SOD spread at the landscape scale, and compare the strategies retrospectively with the \SI{100}{\meter} buffer scheme that was used in practice. We seek to answer two main questions:
+\begin{enumerate}
+    \item How can OCT be used to design spatial strategies to protect a high value region?
+    \item For the Redwood Creek case study, how do the strategies identified using OCT compare with the management that was carried out in practice?
+\end{enumerate}
+
+We start by describing the simulation model used in this chapter, and what approximate models are appropriate for spatial optimisation. Using reduced resolution ODE models of the SOD invasion, we optimise different objectives to protect the national park, and compare the strategies and their wider effects on surrounding regions. This chapter can be considered an extension of the simple model in Chapter~\ref{ch:three_patch} to continuous landscapes, applied to the Redwood Creek infestation.
+
+\section{Simulation model}
+
+In Chapter~\ref{ch:protect_tanoak_model} (Section~\ref{sec:ch5:sod_models}, p.~\pageref{sec:ch5:sod_models}) we reviewed models of SOD spread. Two models captured SOD dynamics at the landscape scale, the scale appropriate for modelling the invasion into Redwood National Park. The first model by \citet{meentemeyer_epidemiological_2011} captures spread across California, and has been used to assess potential large scale management efforts \citep{cunniffe_modelling_2016}. The second model by \citet{tonini_modeling_2018} is similar in structure, but as it is integrated with the forest simulation model LANDIS-II \citep{scheller_design_2007} the scope for complex control strategies of the form we consider is limited. We therefore use the model from \citet{meentemeyer_epidemiological_2011} in this chapter. The controls implemented by \citet{cunniffe_modelling_2016} include area-wide removal of susceptible hosts, and test a number of prioritisation strategies, but all controls are only implemented across the entire state. The controls at this scale are ineffective, or at least require infeasible levels of host removal, but the model was not used to investigate more effective local controls. Here we will use this model on a smaller scale, modelling the infestation near Redwood National Park.
+
+\subsection{Model structure}
+
+The model is a stochastic, spatially explicit raster-based simulation, with each simulation cell containing host units that each represent a number of hosts susceptible to SOD. Infected hosts produce inoculum, \emph{P. ramorum} spores, that are distributed according to a dispersal kernel and can infect other susceptible host units across a heterogeneous landscape. The model does not include host demography, and individual species of host are not tracked separately but combined into one class of host. Host units can be susceptible or infected (Figure~\ref{fig:ch7:sim_model}(a)). As described in \citet{meentemeyer_epidemiological_2011} an infected cell $i$ infects cell $j$ at time $t$ at rate:
+\begin{equation}
+    \label{eqn:ch7:inf_rate}
+    \psi_{ijt} = \beta\left(\chi_t(f_i)m_{it}c_{it}I_{it}\right)\left(\chi_t(f_j)m_{jt}c_{jt}S_{jt}/N_{\text{max}}\right)K_{ji}
+\end{equation}
+where:
+\begin{itemize}
+    \item $\beta$ is the overall spore production rate from infected hosts;
+    \item $\chi_t(f_i)$ is a seasonal indicator variable, either 0 or 1 dependent on whether hosts in cell $i$ are able to infect and be infected at time $t$;
+    \item $m_{it}$ and $c_{it}$ are weather conditions (moisture and temperature respectively) for cell $i$ at time $t$;
+    \item $I_{it}$ and $S_{it}$ are the numbers of infected and susceptible host units in cell $i$ at time $t$;
+    \item $N_{\text{max}}$ is the maximum number of host units in any cell; and
+    \item $K_{ji}$ is the dispersal kernel giving the probability of a spore travelling from cell $i$ to $j$.
+\end{itemize}
+The dynamics are simulated using the Gillespie direct method \citep{gillespie_exact_1977}, giving stochastic simulations.
+
+We use the same host landscape as used by \citet{meentemeyer_epidemiological_2011}, where each cell is given a localised host index value that combines abundance and susceptibility across all hosts in the cell. This index is then discretised to give a number of host units per cell, with a maximum of 100 in any cell (Figure~\ref{fig:ch7:sim_model}(c)). Since the hosts are suitable for the pathogen at different times of the year, each cell is classified as predominantly redwood/tanoak, or mixed evergreen forest. This forest type mask sets the seasonal indicator variable for each cell ($\chi_t(f_i)$). Redwood/tanoak forest can infect and is able to be infected for the first 28 weeks of the year. Mixed evergreen forests are suitable for the pathogen from week 6 through to week 28.
+
+Infected host units produce spores at a rate of \SI{4.55}{\per\week} \citep{cunniffe_modelling_2016}, which are distributed according to the dispersal kernel found by \citet{meentemeyer_epidemiological_2011}. The kernel is a combination of 2 Cauchy type kernels, giving the probability of a spore dispersing a distance $d$:
+\begin{equation}
+    K(d) = \gamma\left(\frac{1}{1+(d/\alpha_1)^2}\right) + (1-\gamma)\left(\frac{1}{1+(d/\alpha_2)^2}\right)
+\end{equation}
+where $\gamma=0.9947$ is the proportion of short range dispersal events, $\alpha_1=$\SI{20.57}{\meter} is the short range kernel scale, and $\alpha_1=$\SI{9.504}{\km} is the long range kernel scale (Figure~\ref{fig:ch7:sim_model}(b)). Overall, simulating the model around the southern tip of Redwood National Park leads to widespread infection over \SI{30}{\years} (Figure~\ref{fig:ch7:sim_model}(e)--(g)).
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/SimModel}
+        \caption[Simulation model of SOD invading Redwood National Park]{The simulation model capturing the spread of SOD into Redwood National Park. The hosts transition between susceptible and infected, as shown in \textbf{(a)}. Infected hosts produce inoculum which is then distributed according to the kernel shown in \textbf{(b)}, a combination of a long- and short-ranged Cauchy kernel. In \textbf{(c)} the host landscape around the south of the national park is shown. \textbf{(d)}--\textbf{(g)} plot the median level of infection in the simulation model over \SI{30}{\years}.\label{fig:ch7:sim_model}}
+    \end{center}
+\end{figure}
+
+\subsection{Sporulation conditions}
+
+The simulation model used by \citet{meentemeyer_epidemiological_2011} uses the forest type mask that varies pathogen suitability in space and time, and weather data ($m_{it}$ and $c_{it}$ in Equation~\ref{eqn:ch7:inf_rate}) that also varies by cell and each week. Since we will be approximating the simulation model using an ODE system, removing this time dependence would make the ODEs simpler and make convergence using OCT easier. To do this we tested what effect on the simulations averaging these time-dependent variables has (Figure~\ref{fig:ch7:weather}). To calculate the average, we take the root mean square value of the weather and forest type mask over time:
+\begin{equation}
+    M_i = \sqrt{\frac{\sum_t\left(\chi_t(f_i)m_{it}c_{it}\right)^2}{N_t}}
+\end{equation}
+where $N_t$ is the number of time points. The root mean square is used because in the infection rate (Equation~\ref{eqn:ch7:inf_rate}) these terms appear in the susceptible and infected terms, and so are effectively squared. Since the kernel is very short ranged, taking this local average is a good approximation.
+
+It is clear that the redwood/tanoak forest nearer the coast is generally more suitable for the pathogen, both because of the weather and forest type mask (Figure~\ref{fig:ch7:weather}(a)--(b)). Whilst averaging these effects over time does reduce within year variation, it does not significantly affect the median simulation dynamics (Figure~\ref{fig:ch7:weather}(c)). We therefore use the averaged weather and forest type mask for simulations in this chapter.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/Weather}
+        \caption[Acounting for weather and forest type in the simulation model]{Accounting for varying weather and forest type in the simulation model. In \textbf{(a)} the forest type around the national park is shown, with regions of mixed evergreen forest, and redwood and tanoak areas. The redwood/tanoak forest is susceptible and can sporulate for the first 28 weeks of the year. Mixed evergreen forests are unsuitable for the pathogen until the 7\textsuperscript{th} week of the year, and become unsuitable again after the 28\textsuperscript{th} week. \textbf{(b)} shows the average mask across the region, with weather and forest type averaged over time. The weather and forest type are more suitable for the pathogen closer to the coast. In \textbf{(c)} the effect of averaging the weather and forest type mask is shown. The lines show the medians of 250 simulation realisations. The full simulation has weekly varying weather, and differences in pathogen suitability due to forest type. Averaging just the weather over time, or averaging both the weather and forest type suitability over time, does not significantly affect the simulation dynamics.\label{fig:ch7:weather}}
+    \end{center}
+\end{figure}
+
+\section{Approximate model}
+
+\subsection{Reduced resolution model}
+
+We require an approximate model of the simulation dynamics which must be simple enough to allow optimisation using OCT but with enough spatial detail to find spatially resolved strategies. As mentioned in Chapter~\ref{ch:complex_models}, the main factor affecting convergence in OCT is the number of variables that must be optimised. As spatial detail is added this increases the number of state and control variables, but also increases the spatial resolution of the control strategy. We therefore seek an approximate model that captures as much spatial detail as possible whilst remaining optimisable. We propose using reduced resolution ODE models of the simulation, which are raster based ODE approximations of the dynamics but with reduced spatial detail (Figure~\ref{fig:ch7:approx_model}(a)--(b)). The host landscape used is an aggregated version of the simulation host landscape, with each cell in the approximate model using the average host density of the \SI{250}{\meter} simulation cells contained within it.
+
+The ODE approximation follows the same susceptible-infected dynamics as the simulation model, with dispersal across the landscape according to a different kernel. We use the averaged weather and forest type mask to modulate the susceptibility and infectiousness of each cell, with the average now calculated for each cell in the aggregated landscape. The ODE system for susceptible ($S$) and infected ($I$) hosts in cell $i$ is therefore given by:
+\begin{subequations}
+    \label{eqn:ch7:approx_model}
+    \begin{align}
+        \dot{S}_i &= -\tilde{\beta}M_iS_i\sum_j\left(k_{ij}M_jI_j\right) \\
+        \dot{I}_i &= \tilde{\beta}M_iS_i\sum_j\left(k_{ij}M_jI_j\right)
+    \end{align}
+\end{subequations}
+where $\tilde{\beta}$ is the infection rate to be fitted, $k_{ij}$ is the kernel, $M_i$ is the weather and forest type mask, and the sum is over all aggregated cells in the landscape.
+
+\subsection{Metrics for comparison}
+
+To choose the most appropriate resolution for the approximate model, by testing the quality of fit and plausibility of control optimisation, we require metrics that can compare the approximate model with simulations across different resolutions. This will ensure that we can assess different resolution approximate models using a single consistent metric. There are three obvious choices of scale for comparing the approximate model with simulations:
+\begin{description}
+    \setlength{\itemsep}{3pt}%
+    \setlength{\parskip}{3pt}%
+    \setlength{\parsep}{3pt}%
+    \item[Landscape scale:] total infection across the landscape;
+    \item[Aggregated scale:] simulation data aggregated to the approximate model resolution;
+    \item[Divided scale:] approximate model data divided down to the \SI{250}{\meter} simulation scale.
+\end{description}
+
+For comparing across different resolution, the aggregated scale cannot be used since this will be a different scale for each approximate model. The landscape and divided scales can be used to compare across resolutions though. The metric we choose for comparison is the root mean square error (RMSE) between the simulation and approximate model disease progress curves (DPCs). We use this metric over the summed squared errors previously used as the value is more meaningful for comparison, since it is measured in the same units as disease progression. At the landscape scale, the RMSE for the landscape DPCs is used. At the divided and aggregated scales the RMSE is calculated over DPCs for each cell.
+
+\subsection{Fitting}
+
+We fit two forms of kernel ($k_{ij}$ in Equation~\ref{eqn:ch7:approx_model}), an exponential type:
+\begin{align}
+    k_1(d) &\propto \exp{\left(-d_{ij}/\sigma_1\right)}\;, \\
+\intertext{and a Cauchy type kernel:}
+    k_2(d) &\propto \frac{1}{1+\left(d/\sigma_2\right)}\;,
+\end{align}
+where $d$ is distance between cell centres, and $\sigma_1$ and $\sigma_2$ are scale parameters for the two forms of kernel. The scale parameters and infection rate ($\tilde{\beta}$) are fitted by minimising the RMSE at the aggregated scale using the Nelder-Mead simplex algorithm \citep{gao_implementing_2012} from the SciPy library \citep{scipy}. This scale is used to maintain spatial information whilst avoiding repeated dividing operations to reach the divided scale.
+
+
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/ApproxModel}
+        \caption[Approximating the simulation model with a reduced resolution model]{Approximating the simulation model with a reduced resolution model. The simulation host landscape in \textbf{(a)} includes a buffer to eliminate edge effects. The red box shows the region approximated by the reduced resolution host landscape, shown using a \SI{2500}{\meter} resolution in \textbf{(b)}. The ODE approximate model is fitted to the simulation model, by matching disease progress curves for each cell in the approximate model, here shown for the \SI{2500}{\meter} resolution model, with a Cauchy kernel. In \textbf{(c)} the simulation and approximate disease progress curves across the whole landscape are shown, with the approximate model capturing the dynamics well. In \textbf{(d)} the root mean square error (RMSE) for each cell at the scale of the simulation is shown (divided metric). The largest errors are seen close to the initial seed infection. \textbf{(e)} shows the disease progress curves for a single \SI{250}{\meter} cell far from the initial seed infection, capturing the dynamics well. \textbf{(f)} shows the same for a cell close to the initial infection. The low resolution approximate model cannot precisely capture the number of hosts in each \SI{250}{\meter} cell, and so the dynamics are captured less well.\label{fig:ch7:approx_model}}
+    \end{center}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/ResTestingSnapshots}
+        \caption[Comparing disease spread across approximate model resolutions]{Comparing disease spread across approximate model resolutions. The top row shows infection spread in the \SI{2500}{\meter} resolution approximate model after 10, 20, and \SI{20}{\years}. The second and third rows show the same for the \SI{1500}{\meter} and \SI{500}{\meter} resolution models respectively. All resolutions of model capture the same pattern of spread, with most infection nearer to the coast.}
+    \end{center}
+\end{figure}
+
+\section{Control and optimisation}
+
+\subsection{Control methods}
+
+Thinning and roguing, effect on susceptible/infected hosts.
+
+Control constraint. Rationale for simpler constraint, and justification based on moving resources.
+
+\subsection{Large scale optimisation}
+
+Number of states to optimise. Beyond BOCOP.
+
+Exact derivatives and Ipopt.
+
+\section{Results}
+
+\subsection{Resolution testing}
+
+Comparing under no control.
+
+Optimisation of non-spatial strategy, and comparison under control.
+
+Choice of resolution for rest of chapter.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/ResTesting}
+        \caption[Using the RMSE metric to test the approximate models]{Using the RMSE metric the different resolution approximate models can be tested. In \textbf{(a)} the landscape and divided metrics are shown for the exponential and cauchy kernel under no control. The cauchy kernels show a better fit across all resolutions, with higher resolution approximate models fitting better. Under a non-spatial control strategy, all resolutions fit approximately the same and fit better than under no control, as shown in \textbf{(b)}. The control strategy is shown in \textbf{(c)}. The landscape disease progress curves are shown in \textbf{(d)}, and the divided RMSE metric across the landscape for the \SI{2500}{\meter} cauchy model under control is shown in \textbf{(e)}.}
+    \end{center}
+\end{figure}
+
+\subsection{Open-loop control}
+
+National park objective. Control results.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/OL_NP}
+        \caption[Optimal control strategy to protect the national park]{Optimal control strategy using the national park objective. \textbf{(a)} shows the objective raster, with control optimised to maximise the number of healthy hosts in the national park after \SI{20}{\years}. The simulation and approximate model disease progress curves across the landscape are shown in \textbf{(a)}, and within the national park only in \textbf{(c)}. The control strategy is shown in \textbf{(d)} and \textbf{(e)}, with thinning initially focussed near the coast and roguing focussed in the national park. The median proportion of hosts infected in the simulations show a reduction in hosts across the landscape apart from in the national park. There is little infection spread.}
+    \end{center}
+\end{figure}
+
+Mixed objective. Control results.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/OL_Mixed}
+        \caption[Optimal control strategy using the mixed objective]{\textbf{(a)} The mixed objective protects the national park, but with some value given to hosts outside. The disease progress curves across the landscape and just in the national park are shown in \textbf{(b)} and \textbf{(c)}. There is more disease than using the national park objective. The control strategy shown in \textbf{(d)} and \textbf{(e)} only thins in the environment conducive to sporulation. More roguing is carried out to the east, leading to more infection but also retains more host (\textbf{(f)}).}
+    \end{center}
+\end{figure}
+
+\subsection{Comparing strategies}
+
+100m buffer strategy.
+
+Hosts saved across landscape, number culled and overall comparison
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/100mBuffer}
+        \caption[\SI{100}{\meter} buffer zone strategy]{The \SI{100}{\meter} buffer removes detected hosts, and all hosts within \SI{100}{\meter} of the detection, once every year. The strategy keeps levels of infection low (\textbf{(b)}), but can lead to high levels of infection in the national park (\textbf{(c)}). As shown in \textbf{(d)}, large numbers of hosts are removed across the landscape.}
+    \end{center}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch7/StrategyComparison}
+        \caption[Comparison of all control strategies]{Comparison of all control strategies. In \textbf{(a)} the proportion of hosts saved relative to simulations under no control are shown for each strategy. \textbf{(b)} shows the number of hosts culled for each strategy, and \textbf{(c)} gives the number of hosts saved both inside and outside the national park. In some cases the \SI{100}{\meter} strategy contains the epidemic and saves the most hosts, but can also result in culling large numbers of hosts. The national park and mixed strategies protect the national park best.}
+    \end{center}
+\end{figure}
+
+\subsection{Best resolution}
+
+Retrospective comparison of control using 5km resolution.
+
+\section{Discussion}
+
+\subsection{Spatial optimisation}
+
+Simplifications to control/epidemiology e.g.\ Epanchin niell work.
+
+PDE models and optimal control.
+
+\subsection{Practical implementation}
+
+Large scale removal of hosts. Willingness to comply. Who is doing control? Whose land?
+
+Other disease pressure not accounted for, e.g.\ spreading down stream.
+
+Rule of thumb/bigger message - need to control at larger radius to be effective. Front load strategy to keep ahead otherwise always playing catch-up. Guarding against worst case scenario.
+
+\subsection{MPC}
+
+Scope to adapt to stochasticity
+
+\section{Conclusions}
+
+Overall conclusions.
