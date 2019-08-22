@@ -2,3 +2,52 @@
 %
 \chapter{Discussion\label{ch:discussion}}
 
+\section{Summary}
+
+Overview of findings through the thesis. How they appear in chapters and main conclusions.
+
+\section{Contributions and limitations}
+
+\subsection{Optimal control theory}
+
+Overarching theme: use of OCT to determine when, where and what controls most appropriate for disease management. Selecting control methods and deploying optimally in space and time.
+
+Direct/indirect methodology comparison. Developing direct method allowed for very large problems to be solved. Many control methods (mixed stand; what), and ultimately through to spatially resolved optimal control strategies. Closest comparisons with this are \citet{epanchin_optimal_2012} or PDE type models (reaction-diffusion) \citep[e.g.][]{miyaoka_optimal_2019, neilan_optimal_2011, christley_optimal_2016}.
+
+Testing of OCT strategies, can result in poor control when information is lacking or the system is highly complex. Necessity of simulation models to test/predict/assess.
+
+\subsection{Optimising complex systems}
+
+Approximating models of complex systems to allow optimisation. Factoring out space either completely, into metapopulations, or reduced resolution models allows maximum usage of OCT to give the most resolved strategies possible.
+
+The feedback strategies we have developed account for inaccuracies in the approximation. MPC identifies strategies that improve control over open-loop. Demonstrated in different scenarios that MPC provides the best strategies, allowing for adapting control as the epidemic progresses and knowledge changes. This is how to control.
+
+Robustness of the MPC strategies to stochasticity, parameter and observational uncertainty. Again connect to adapting control, failures and worst case scenarios.
+
+\subsection{Objectives for disease management}
+
+To assess policy need clear quantification of management goals - why to control. For SOD, and arguably plant disease management more generally, consideration of solely large scale objectives has meant mathematical models have had little useful to say. Late detection and lack of funding leads to late identification of epidemics, and so any widely effective strategy will be highly challenging.
+
+We have made progress here by considering local management/protection goals, shown in the field to be effective. Optimisations from models can be useful. Approximate model means control only approximately optimal, but the MPC framework keeps close to optimal and testing shows that strategy useful.
+
+Combining protection and biodiversity goals $\rightarrow$ importance of considering wider management goals. Similarly, not realistic to have strategy designed to solely protect national park. Compare with human/animal health objectives, more scope here for exclusive protection but not entirely.
+
+Importance of simulation model for assessing strategies; allows the utility of the approximately optimal control to be demonstrated. Use as proxy for real world.
+
+\subsection{Practical management}
+
+Combining the what, where, why, when and how is what allows practical management advice. Important balance between level of approximation, realism of simulation model, choice of objective and system constraints. Everything aligned gives practical and realistic advice.
+
+Are strategies too complex? When is MPC not needed? How can advice be generated from optimal control results, e.g.\ rules of thumb.
+
+Level of surveillance $\rightarrow$ can vary the complexity of MPC to suit risk. Couple with sensitivity of control strategies, depends on how good the approximate model is. If approximate model perfect, no need for MPC and open-loop will suffice. Importance of choosing an appropriate approximate model, but balance with difficulty of optimisation and stochasticity/risk. If variation in real world/simulation significant then will need surveillance/re-optimisation anyway.
+
+\section{Scope for future work}
+
+More complex approximate models, e.g.\ non-linear incidence functions. PDE approximate models for spatial optimisation of control.
+
+Other methods for optimisation $\rightarrow$ reinforcement learning/AI rather than optimal control theory. Ability to solve larger dimension problems?
+
+\section{Concluding remarks}
+
+Summary of setting, combining maths, biology and systems engineering. Difficulty of optimising complex epidemiological models that capture enough realism to inform policy. Contributed to methods that could inform policy, but only a beginning to applying robust systems engineering approaches in an epidemiological setting. Significance and necessity clear though, with effects of climate change and a growing population that is increasingly global.
