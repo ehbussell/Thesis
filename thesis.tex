@@ -75,11 +75,14 @@
 \usepackage{array}
 \usepackage{bm}
 \usepackage{tocbibind}
+\usepackage{enumitem}
 
 \captionsetup[algorithm]{font=small, labelfont={bf,sf,color=ctcolorfloatlabel}, format=hang, labelsep=colon, singlelinecheck=false}
+\setlist[description]{leftmargin=\parindent,labelindent=\parindent}
 
 \DeclareSIUnit\t{t}
 \DeclareSIUnit\year{year}
+\DeclareSIUnit\week{wk}
 \DeclareSIUnit\years{years}
 \DeclareSIUnit\hosts{hosts}
 \DeclareSIUnit\host{host}
@@ -128,7 +131,7 @@ breaklinks=true,			% 	- allow line break inside links
 bookmarksnumbered=true,		%
 bookmarksopen=true,			%
 bookmarksopenlevel=0,
-pdfpagelayout=TwoPageLeft
+pdfpagelayout=TwoPageRight
 }
 \usepackage{bookmark}
 
@@ -176,7 +179,7 @@ pdfpagelayout=TwoPageLeft
 % **************************************************
 % Document CONTENT
 % **************************************************
-% \includeonly{Chapters/Chapter02, Chapters/Backmatter}
+\includeonly{Chapters/Chapter07, Chapters/Backmatter}
 % To print only figures:
 % \usepackage[active, tightpage]{preview}
 % \PreviewBorder=12pt\relax
