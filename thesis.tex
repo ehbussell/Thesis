@@ -13,7 +13,8 @@
 	listof=totoc,				% include listof entries in toc
 	titlepage=on,				% own page for each title page
 	captions=tableabove,		% display table captions above the float env
-	draft=false,				% value for draft version
+  draft=false,				% value for draft version
+  numbers=noenddot
 ]{scrreprt}%
 
 % **************************************************
@@ -62,7 +63,7 @@
 
 \usepackage{afterpage}
 \usepackage{lineno}
-\usepackage[group-separator={,},group-minimum-digits={4},per-mode=reciprocal]{siunitx}
+\usepackage[group-digits=integer,group-separator={,},group-minimum-digits={4},per-mode=reciprocal,binary-units=true]{siunitx}
 \usepackage{duckuments}
 \usepackage{booktabs}
 \usepackage{placeins}
@@ -75,10 +76,13 @@
 \usepackage{array}
 \usepackage{bm}
 \usepackage{tocbibind}
-\usepackage{enumitem}
+\usepackage{layouts}
+\usepackage{appendix}
+\usepackage[percent]{overpic}
+
+% \renewcommand{\appendixname}{Annex}
 
 \captionsetup[algorithm]{font=small, labelfont={bf,sf,color=ctcolorfloatlabel}, format=hang, labelsep=colon, singlelinecheck=false}
-\setlist[description]{leftmargin=\parindent,labelindent=\parindent}
 
 \DeclareSIUnit\t{t}
 \DeclareSIUnit\year{year}
@@ -86,6 +90,7 @@
 \DeclareSIUnit\years{years}
 \DeclareSIUnit\hosts{hosts}
 \DeclareSIUnit\host{host}
+\DeclareSIUnit{\feet}{ft}
 \sisetup{detect-all=true, per-mode=reciprocal}
 
 % Bibliography setup
@@ -176,16 +181,52 @@ pdfpagelayout=TwoPageRight
 \newfloat{Example}{htbp}{loa}
 \raggedbottom
 
+
+\DeclareFieldFormat{citehyperref}{%
+  \DeclareFieldAlias{bibhyperref}{noformat}% Avoid nested links
+  \bibhyperref{#1}}
+
+\DeclareFieldFormat{textcitehyperref}{%
+  \DeclareFieldAlias{bibhyperref}{noformat}% Avoid nested links
+  \bibhyperref{%
+    #1%
+    \ifbool{cbx:parens}
+      {\bibcloseparen\global\boolfalse{cbx:parens}}
+      {}}}
+
+\savebibmacro{cite}
+\savebibmacro{textcite}
+
+\renewbibmacro*{cite}{%
+  \printtext[citehyperref]{%
+    \restorebibmacro{cite}%
+    \usebibmacro{cite}}}
+
+\renewbibmacro*{textcite}{%
+  \ifboolexpr{
+    ( not test {\iffieldundef{prenote}} and
+      test {\ifnumequal{\value{citecount}}{1}} )
+    or
+    ( not test {\iffieldundef{postnote}} and
+      test {\ifnumequal{\value{citecount}}{\value{citetotal}}} )
+  }
+    {\DeclareFieldAlias{textcitehyperref}{noformat}}
+    {}%
+  \printtext[textcitehyperref]{%
+    \restorebibmacro{textcite}%
+    \usebibmacro{textcite}}}
+
 % **************************************************
 % Document CONTENT
 % **************************************************
-\includeonly{Chapters/Chapter07, Chapters/Backmatter}
+% \includeonly{Chapters/Chapter08}
 % To print only figures:
 % \usepackage[active, tightpage]{preview}
 % \PreviewBorder=12pt\relax
 % \PreviewSnarfEnvironment[{[]}]{figure}
 \begin{document}
-
+% Text width is 5.47293 inches
+% Paper width is 8.26933 inches
 % --------------------------
 % rename document parts
 % --------------------------
@@ -211,7 +252,8 @@ pdfpagelayout=TwoPageRight
 
 \setlength{\parindent}{15pt}
 \setstretch{1.5}
-\setlength{\skip\footins}{2cm}
+% \setlength{\skip\footins}{2cm}
+\setlength{\skip\footins}{2pc plus 5pt}
 
 \include{Chapters/Chapter01}
 \include{Chapters/Chapter02}
@@ -227,8 +269,13 @@ pdfpagelayout=TwoPageRight
 % --------------------------
 %TC:ignore
 \include{Chapters/Backmatter}
-%TC:endignore
 
+\begin{appendices}
+\include{Chapters/AppendixA}
+\include{Chapters/AppendixB}
+\include{Chapters/AppendixC}
+\end{appendices}
+  %TC:endignore
 % **************************************************
 % End of Document CONTENT
 % **************************************************

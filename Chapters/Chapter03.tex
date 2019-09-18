@@ -4,53 +4,81 @@
 
 \section{Introduction}\label{sec:ch3:intro}
 
-Whilst established diseases can be difficult or impossible to eradicate, local control to protect high value resources can still be effective. In this chapter we will investigate how the optimal control methods from the previous chapter can be applied to a simple model of disease invasion into a high value region. We will use the optimisation methods to find controls that best protect the high value region. The sudden oak death epidemic in California cannot be controlled at the landscape scale, but there are still highly valuable local resources that could be protected from the disease. This includes commercially valuable timber stocks, and areas important ecologically or for tourism, such as national parks. Optimally allocating limited control resources could significantly improve protection of valuable regions, but we seek to answer how to characterise these optimal strategies.
+Whilst established diseases can be difficult or impossible to eradicate \citep[e.g.][]{gottwald_post_2007}, local control to protect high value resources can still be effective \citep[e.g.][]{hansen_efficacy_2019}. The sudden oak death epidemic in California cannot be controlled at the landscape scale \citep{cunniffe_modelling_2016}, but there are still highly valuable local resources that could be protected from the disease. This includes commercially valuable timber stocks and areas important ecologically or for tourism, such as national parks. Optimally allocating limited control resources could significantly improve protection of valuable regions, and we seek here to answer how to characterise these optimal strategies. In this chapter we will investigate how the optimal control methods introduced in the previous chapter can be applied to a relatively simple metapopulation model of disease invasion into a high value region. We will use the direct and indirect optimisation methods described in the previous chapter to find time-dependent roguing strategies that best protect the high value region.
 
-In this chapter we use OCT to find an optimal time varying allocation of limited control resources, balancing control in a buffer region and a high value region. We will show how these controls can be optimally deployed to minimise disease in the high value region. We show that two main strategies arise: one prioritising control in the high value region, and the other switching prioritisations during the course of the epidemic. The sensitivity of the control strategy to the model parameterisation is tested, and we show that OCT results do not always remain effective when tested on more complex models.
+In this chapter we use OCT to find an optimal time varying allocation of limited control resources, balancing control in a buffer region and a high value region. We will show how these controls can be optimally deployed to minimise disease in the high value region. We show that two main strategies arise: one prioritising control in the high value region, and the other switching prioritisations during the course of the epidemic. The sensitivity of the control strategy to the model parameterisation is tested, and we show that OCT results do not always remain effective when parameters are not known accurately. We use the optimal strategies to compare the direct and indirect numerical optimisation approaches, finding that the direct method is more robust and reliable.
 
 \section{Methods}
 
-In this section we will develop a simple model that captures the dynamics of a pathogen threatening to invade a high value region. The model will incorporate control through removal of infected hosts, and we will set up an optimal control problem to determine where limited resources should be allocated to this control over time. The optimisation problem will be solved using both the direct and indirect formulations described in the previous chapter.
+In this section we will develop a relatively simple deterministic model that captures the dynamics of a pathogen threatening to invade a high value region. The model will incorporate control through removal of infected hosts, and we will set up an optimal control problem to determine where limited resources should be allocated to this control over time. The optimisation problem will be solved using both the direct and indirect formulations described in the previous chapter.
 
 \subsection{Invasion model}
 
-The model splits the host landscape into three regions: a generally infested area where the disease is well established, a buffer region, and a the high value region that is to be protected. To reduce the number of parameters the infested region is modelled as a source of external inoculum, generating a force of infection on the buffer region. The buffer and high value regions are modelled as well-mixed patches, meaning the only spatial component is the between-patch coupling. An SIR model is used for the epidemic dynamics \citep{keeling_modeling_2008}, where hosts can be susceptible to the disease ($S$), infected by the disease and infectious ($I$), or removed by the disease or control ($R$). As the model is based on SOD dynamics, removal represents both death caused by the pathogen, and roguing as part of the disease management. This roguing is the control method that will be optimised. A schematic of the model is shown in Figure~\ref{fig:ch3:model_schematic}.
-
-\begin{figure}
-    \begin{center}
-        % \includegraphics[width=0.95\textwidth]{Graphics/Ch3/Model_schematic}
-        \caption[Model schematic]{\label{fig:ch3:model_schematic}}
-    \end{center}
-\end{figure}
+The model abstracts the situation of an invading pathogen by splitting the host landscape into three regions: a generally infested area where the disease is well established, a buffer region in which the disease has not yet established, and a high value region that is to be protected. To reduce the number of state variables and parameters the infested region is modelled as a source of external inoculum, generating a constant force of infection on the buffer region. The buffer and high value regions are modelled as well-mixed patches, meaning the only spatial component is the between-patch coupling. An SIR model, in which hosts can be susceptible to the disease ($S$), infected by the disease and infectious ($I$), or removed by the disease or control ($R$), is used for the epidemic dynamics \citep{keeling_modeling_2008}. As the model is based on SOD dynamics, removal represents both death caused by the pathogen, and roguing as part of the disease management. This roguing is the control method that will be optimised. A schematic of the model is shown in Figure~\ref{fig:ch3:model_schematic}.
 
 Each patch has a fixed population size ($N_B$ and $N_V$ for the buffer and high value regions respectively), and the two patches are linked by a coupling constant $\epsilon$. The within-patch transmission rate is given by $\beta$, leading to the following system of ODEs:
 \begin{subequations}\label{eqn:ch3:patch_model}
     \begin{align}
         \dot{S}_B &= -\mathcal{F}S_B - \beta{}I_BS_B - \epsilon\beta{}I_VS_B \label{eqn:ch3:patch_model_a}\\
-        \dot{I}_B &= \mathcal{F}S_B + \beta{}I_BS_B + \epsilon\beta{}I_VS_B - \mu{}I_B-f_B\eta{}I_B \label{eqn:ch3:patch_model_b}\\
+        \dot{I}_B &= \mathcal{F}S_B + \beta{}I_BS_B + \epsilon\beta{}I_VS_B - \mu{}I_B-f_B(t)\eta{}I_B \label{eqn:ch3:patch_model_b}\\
         \dot{S}_V &= -\beta{}I_VS_V - \epsilon\beta{}I_BS_V \label{eqn:ch3:patch_model_c}\\
-        \dot{I}_V &= \beta{}I_VS_V + \epsilon\beta{}I_BS_V - \mu{}I_V-f_V\eta{}I_V \label{eqn:ch3:patch_model_d}
+        \dot{I}_V &= \beta{}I_VS_V + \epsilon\beta{}I_BS_V - \mu{}I_V-f_V(t)\eta{}I_V \label{eqn:ch3:patch_model_d}
     \end{align}
 \end{subequations}
-where the subscripts $B$ and $V$ refer to the buffer and high value patches respectively. The external force of infection from the infested region is given by $\mathcal{F}$. The infectious period of the disease is given by $1/\mu$, and hosts are removed by roguing at a rate $\eta$. The time dependent control inputs $f_B$ and $f_V$ are the proportion of infected hosts that are being controlled at that time in the buffer and high value regions respectively. Throughout we scale time by the infectious period, such that the disease induced removal rate $\mu$ is equal to one.
+where the subscripts $B$ and $V$ refer to the buffer and high value patches respectively. The external force of infection from the infested region is given by $\mathcal{F}$. The infectious period of the disease in the absence of control is given by $1/\mu$, and hosts are removed by roguing at a rate $\eta$. The time dependent control inputs $f_B(t)$ and $f_V(t)$ are the proportion of infected hosts that are being controlled at that time in the buffer and high value regions respectively. Throughout, we scale time by the infectious period such that the disease induced removal rate $\mu$ is equal to one. The meanings and default values of all parameters and variables are given in Table~\ref{tab:ch3:symbols}.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch3/Model}
+        \caption[Model schematic]{Schematic of the invasion model used in this chapter. \textbf{(a)} shows the spatial structure. A generally infested area (GIA) provides a source of inoculum, generating a constant force of infection on an uninvaded buffer region (B). The infection can then in turn invade the high value region (V). The goal of control is to protect this high value region. Within each region the epidemic follows SIR dynamics as shown in \textbf{(b)}, where hosts move from susceptible to infected and are removed by the disease or through control. The dashed line indicates that the number of infected hosts influences the infection rate.\label{fig:ch3:model_schematic}}
+    \end{center}
+\end{figure}
 
 \subsection{Optimal control problem}
 
-The objective of control in this system is to protect the high value region from infection. Optimisation of the roguing strategy should minimise the impact of the pathogen in the high value region. We choose an objective of minimising the number of infected and removed hosts at the terminal time $T$. The population size is constant in each region, so this is equivalent to maximising the number of healthy and susceptible, high value hosts that are retained in the system. We impose a restriction on the number of hosts that can be rogued per unit time to capture the economic and logistical limitations to disease management. The maximum expenditure rate, or number of hosts treated per unit time across both patches, is given by $M$. This gives the following optimal control problem:
+The objective of control in this system is to protect the high value region from infection. Optimisation of the roguing strategy should minimise the impact of the pathogen in the high value region. We choose an objective of minimising the number of infected and removed hosts at the terminal time $T$. The population size is constant in each region, so this is equivalent to maximising the number of healthy and susceptible hosts that are retained in the high value region. We impose a restriction on the number of hosts that can be rogued per unit time to capture the economic and logistical limitations of disease management. The maximum expenditure rate, or number of hosts treated per unit time across both patches, is given by $M$. This gives the following optimal control problem:
 \begin{subequations}\label{eqn:ch3:opt_problem}
     \begin{align}
         \min_{f_i(t)} \quad{} &\null J = N_V(T) - S_V(T) \label{eqn:ch3:opt_problem_a}\\
         \text{subject to} \quad{} &\null f_B(t)I_B(t) + f_V(t)I_V(t) \leq M \quad \forall t \label{eqn:ch3:opt_problem_b}\\
-        &\null 0\leq f_i \leq 1\label{eqn:ch3:opt_problem_c}
+        &\null 0\leq f_i(t) \leq 1\label{eqn:ch3:opt_problem_c}
     \end{align}
 \end{subequations}
-where the dynamics are given by Equations~\ref{eqn:ch3:patch_model}.
+where the state dynamics are given by Equations~\ref{eqn:ch3:patch_model}.
 
-In the absence of the budget constraint it might be expected that control would be maximal at all times, treating all infected hosts in both regions throughout the epidemic. We might expect therefore, that with the constraint the optimal strategy would prioritise control in the more important region, the value region, and allocate any remaining resource to the buffer region. We will test this hypothesis using the OCT framework introduced in the previous chapter, and use this simple system to compare the direct and indirect OCT frameworks. The following sections formulate the two versions of the optimal control problem.
+In the absence of the budget constraint it might be expected that control would be maximal at all times, treating all infected hosts in both regions throughout the epidemic. We verified that this is indeed the case for the default parameters. We might therefore expect that, with the constraint, the optimal strategy would prioritise control in the more important region---the high value region---and allocate any remaining resources to the buffer region. We will test this hypothesis using the OCT framework introduced in the previous chapter, and use this simple system to compare the direct and indirect OCT frameworks. The following sections formulate the two versions of the optimal control problem.
+
+\begin{table}[t]
+    \centering
+    \caption[Table of parameter and variable meanings and default values]{Table of parameter and variable meanings and default values.\label{tab:ch3:symbols}}
+    \begin{tabular}{@{}lp{8.5cm}l@{}}
+        \toprule
+        \textbf{Symbol} & \textbf{Meaning} & \textbf{Default value} \\
+        \midrule
+        $\beta$ & Infection rate & \SIrange[range-units=brackets,open-bracket={[},close-bracket={]},range-phrase=--]{0.001}{0.004}{\per\host\per\t} \\%$[0.001, 0.004]$ \\
+        $\mathcal{F}$ & External force of infection & \SI{0.0}{\per\t} \\
+        $\epsilon$ & Coupling between regions & 0.3 \\
+        $\mu$ & Pathogen-induced death rate & \SI{1.0}{\per\t} \\
+        $\eta$ & Roguing rate & \SI{0.2}{\per\t} \\
+        \midrule
+        $N_B$ & Number of hosts in the buffer region & 500 \\
+        $N_V$ & Number of hosts in the high value region & 100 \\
+        $S_B$ & Number of susceptible hosts in the buffer region & $[0, N_B]$ \\
+        $S_V$ & Number of susceptible hosts in the high value region & $[0, N_V]$ \\
+        $I_B$ & Number of infected hosts in the buffer region & $[0, N_B]$ \\
+        $I_V$ & Number of infected hosts in the high value region & $[0, N_V]$ \\
+        \midrule
+        $f_B(t)$ & Proportion of infected hosts in buffer region rogued at time $t$ & $[0, 1]$ \\
+        $f_V(t)$ & Proportion of infected hosts in high value region rogued at time $t$ & $[0, 1]$ \\
+        $M$ & Maximum expenditure rate & \SI{10}{\hosts} \\
+        $J$ & Objective function & Equation~\ref{eqn:ch3:opt_problem_a} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \subsection{Indirect formulation}
 
-In the indirect formulation the Pontryagin maximum principle is used to set up an adjoint system, and a Hamiltonian that is minimised along the optimal control path. The adjoint system ($\vect{\lambda}$) dynamics and Hamiltonian $H$ are defined by the following equations:
+In the indirect formulation, the Pontryagin maximum principle is used to set up an adjoint system and a Hamiltonian that is minimised along the optimal control path. The adjoint system ($\vect{\lambda}$) dynamics and Hamiltonian $H$ are defined by the following equations:
 \begin{subequations}\label{eqn:ch3:adjoint_hamiltonian}
     \begin{align}
         \dot{\vect{\lambda}} &= -\frac{\partial{}H}{\partial\vect{x}} \label{eqn:ch3:adjoint_hamiltonian_a}\\
@@ -61,7 +89,7 @@ where $\vect{x}$ is the state system, defined for this system in Equations~\ref{
 \begin{equation}
     \vect{\lambda}(T) = \frac{\partial\phi(T)}{\partial\vect{x}}\;.
 \end{equation}
-For this system the payoff function is equal to the objective function $J$, and so all adjoints terminate at zero, apart from $\lambda_{S_V}$ which has a final value of $-1$. This completes the two point boundary value problem, with the state fixed at the initial time, and the adjoint fixed at the final time, allowing us to use the FBSM algorithm introduced in the previous chapter (Algorithm~\ref{alg:ch2:fbsm}). As explained before this solves the state equations forward in time, then the adjoint equations backwards in time, before updating the control function by minimising the Hamiltonian pointwise. This is repeated until the control converges.
+For this system the payoff function is equal to the objective function $J$, and so all adjoints terminate at zero, apart from $\lambda_{S_V}$ which has a final value of $-1$. This completes the two point boundary value problem, with the state fixed at the initial time, and the adjoint fixed at the final time, allowing us to use the FBSM algorithm introduced in the previous chapter (Algorithm~\ref{alg:ch2:fbsm}, p.~\pageref{alg:ch2:fbsm}). As explained before, this solves the state equations forward in time, then the adjoint equations backwards in time, before updating the control function by minimising the Hamiltonian pointwise. This is repeated until the control converges.
 
 Defining the state and adjoint as follows:
 {\renewcommand{\arraystretch}{1}
@@ -81,10 +109,16 @@ the Hamiltonian is then given by:
     H &= (\lambda_{I_B} - \lambda_{S_B})\left(\mathcal{F}+\beta{}I_B+\beta\epsilon{}I_V\right)S_B - \lambda_{I_B}I_B\left(\mu+f_B\eta\right) \\
     &{}\quad\quad+(\lambda_{I_V} - \lambda_{S_V})\left(\beta{}I_V+\beta\epsilon{}I_B\right)S_V - \lambda_{I_V}I_V\left(\mu+f_V\eta\right)\label{eqn:ch3:hamiltonian_a}
     \end{split}\\
-    &= g(\vect{x}, \vect{\lambda}) - \lambda_{I_B}\eta{}I_Bf_B - \lambda_{I_V}\eta{}I_Vf_V\;.\label{eqn:ch3:hamiltonian_b}
+    &= g(\vect{x}, \vect{\lambda}) - \lambda_{I_B}\eta{}I_Bf_B - \lambda_{I_V}\eta{}I_Vf_V\;,\label{eqn:ch3:hamiltonian_b}
+    \intertext{where:}
+    \begin{split}
+        g(\vect{x}, \vect{\lambda}) &= (\lambda_{I_B} - \lambda_{S_B})\left(\mathcal{F}+\beta{}I_B+\beta\epsilon{}I_V\right)S_B - \lambda_{I_B}I_B\mu \\
+        &{}\quad\quad+(\lambda_{I_V} - \lambda_{S_V})\left(\beta{}I_V+\beta\epsilon{}I_B\right)S_V - \lambda_{I_V}I_V\mu\;.
+    \end{split}
     \end{align}
 \end{subequations}
-In Equation~\ref{eqn:ch3:hamiltonian_b} the function $g(\vect{x}, \vect{\lambda})$ is independent of the control, showing that the Hamiltonian is linear in each control function. In the control update step the control inputs are chosen so as to minimise the Hamiltonian at each time. Since the Hamiltonian is linear in the control this leads to bang-bang control, where control is either maximal or minimal. To take into account the budget constraint, at each time point the Hamiltonian is minimised by solving a linear programming problem, subject to the constraint. This specifies the new control at each time point which is then used in the next iteration of the FBSM algorithm.
+
+The function $g(\vect{x}, \vect{\lambda})$ is therefore independent of the control, showing that the Hamiltonian is linear in each control function. In the control update step the control inputs are chosen so as to minimise the Hamiltonian at each time. Since the Hamiltonian is linear in the control this leads to bang-bang control, where control is either maximal or minimal. To take into account the budget constraint, the Hamiltonian is minimised at each time point by solving a linear programming problem subject to the constraint. This specifies the new control at each time point which is then used in the next iteration of the FBSM algorithm.
 
 The adjoint dynamics are derived from this Hamiltonian using Equation~\ref{eqn:ch3:adjoint_hamiltonian_b}. These are found to be:
 \begin{subequations}\label{eqn:ch3:adjoint_dynamics}
@@ -99,7 +133,7 @@ This completes the necessary equations for using the FBSM algorithm.
 
 \subsubsection{Mixed constraint}
 
-In the above analysis the budget constraint was only used when minimising the Hamiltonian; the constraint does not feature in the adjoint equations. Mixed state/control constraints such as this one can be difficult to handle in optimal control problems. We here show that by introducing a penalty function for exceeding the maximum budget, the constrained problem reduces to the form given above, provided that the Hamiltonian minimisation is subject to the constraint. The approach taken here is similar to one used in \citet[Chapter 4]{sage_optimum_1968}.
+In the above analysis the budget constraint was only used when minimising the Hamiltonian; we did not consider the constraint when constructing the adjoint equations. Mixed state/control constraints such as this can be difficult to handle in optimal control problems \citep{hartl_survey_1995}. To verify that not including the constraint is valid, we here show that by introducing a penalty function for exceeding the maximum budget, the constrained problem reduces to the form given above, provided that the Hamiltonian minimisation is subject to the constraint. The approach taken here is similar to one used by \citet[Chapter 4]{sage_optimum_1968}.
 
 The budget constraint is given by $h$:
 \begin{equation}
@@ -112,11 +146,11 @@ Let us define a new state variable $y$ with the following dynamics:
     y(0) &= 0
     \end{align}
 \end{subequations}
-where $H(\cdot)$ is the Heaviside step function. This term is zero when the constraint is adhered to, and is positive when there is constraint violation. We then add to the objective function a penalty term based on this state variable:
+where $H(\cdot)$ is the Heaviside step function (with $H=1$ for $h\geq0$). This term is zero when the constraint is adhered to, and is positive when there is constraint violation. We then add to the objective function a penalty term based on this state variable:
 \begin{equation}
-    J = \left(N_V(T) - S_V(T)\right)\begingroup\color{ctcoloraccessory} + \frac{1}{2}Sy(T)^2 \endgroup
+    J = \left(N_V(T) - S_V(T)\right)\begingroup\color{ctcoloraccessory} + \frac{1}{2}Cy(T)^2 \endgroup
 \end{equation}
-where $S$ is a positive constant. The minimal value of the second term is zero, corresponding to no constraint violation. Defining a new adjoint variable $\lambda_y$ for $y$, the Hamiltonian is now given by:
+where $C$ is a positive constant. The minimal value of the second term is zero, corresponding to no constraint violation. Defining a new adjoint variable $\lambda_y$ for $y$, the Hamiltonian is now given by:
 \begin{equation}
     H = g(\vect{x}, \vect{\lambda}) - \lambda_{I_B}\eta{}I_Bf_B - \lambda_{I_V}\eta{}I_Vf_V \begingroup\color{ctcoloraccessory} + \lambda_yh^2H(h)\endgroup\;.
 \end{equation}
@@ -129,50 +163,92 @@ The adjoints for the susceptible classes are unchanged, but the infected class a
     \dot{\lambda}_{I_V} &= \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta{}S_V + \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta\epsilon{}S_B + \lambda_{I_V}\left(\mu + f_V\eta\right) \begingroup\color{ctcoloraccessory} - 2\lambda_yhH(h)f_V \endgroup\;.
     \end{align}
 \end{subequations}
-Whilst this system could be solved without imposing the constraint when minimising the Hamiltonian, all the red terms in the above equations are zero when controls are chosen that adhere to the budget constraint. This means that when imposing this constraint on Hamiltonian minimisation, the adjoint equations previously used, without considering the constraint, are correct. The simpler solution is therefore used to find the optimal control satisyfing the constraint.
+Whilst this system could be solved without imposing the constraint when minimising the Hamiltonian, all the magenta terms in the above equations are zero when the chosen controls adhere to the budget constraint. This means that when imposing this constraint on Hamiltonian minimisation, the adjoint equations previously used are correct without considering the constraint. The simpler solution is therefore used to find the optimal control satisyfing the constraint.
 
 \subsection{Direct formulation}
 
-The setup for the direct formulation is considerably simpler than for the indirect case, since no derivation of the Hamiltonian or adjoint system is required. The handling of constraints is also much simpler. We use the BOCOP package to generate and solve the NLP problem \citep{bocop}. The state dynamics (Equations~\ref{eqn:ch3:patch_model}) are coded in \CC, and the package discretises the system using a fourth order Runge-Kutta method (direct transcription approach, as described in the previous chapter). The NLP problem is solved using the software Ipopt \citep{wachter_implementation_2006}, which implements an interior point optimisation method.
+The setup for the direct formulation is considerably simpler than for the indirect case, since no derivation of the Hamiltonian or adjoint system is required. The handling of constraints is also much simpler. We use the BOCOP package (v.2.0.5) to generate and solve the NLP problem \citep{bocop}. The state dynamics (Equations~\ref{eqn:ch3:patch_model}) are coded in \CC, and the package discretises the system using a fourth order Runge-Kutta method (direct transcription approach, as described in the previous chapter). The NLP problem is solved using the software Ipopt \citep{wachter_implementation_2006}, which implements an interior point optimisation method.
 
 \section{Results}
 
 \subsection{Optimal strategies}
 
-Intuitive standard strategy found.
+\begin{figure}
+    \begin{center}
+        \includegraphics{Graphics/Ch3/GeneralStrategy}
+        \caption[General optimal strategy]{The general strategy that is found in the majority of cases prioritises control in the high value region. Here the default parameters are used, with 5 hosts initially infected in the buffer region and an infection rate of \SI{0.005}{\per\host\per\t}. \textbf{(a)} shows the proportion of hosts being treated in each region over time, with the number of hosts being treated shown in \textbf{(b)}. The strategy allocates as many resources as possible to the high value region, before spending the remainder in the buffer region. After around 3 time units the number of infected hosts in the high value region exceeds the maximum expenditure $M$, and not all can be treated. \textbf{(c)} shows the disease progress curve for each region.\label{fig:ch3:general_strat}}
+%     \end{center}
+% \end{figure}
+        \vspace*{\floatsep}
+% \begin{figure}
+%     \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch3/SwitchStrategy}}
+        \caption[Switching optimal strategy]{An alternative switching strategy is found for some parameters. The default parameters are used here with 5 hosts initially infected in the buffer region, an infection rate of \SI{0.0028}{\per\host\per\t}, and a maximum expenditure rate of \SI{5}{\hosts}. \textbf{(a)} and \textbf{(b)} show the proportion and number treated over time in each region. For approximately the first 6 units of time, the buffer region is prioritised, before switching to prioritising the high value region. The disease progress curves are shown in \textbf{(c)}. \textbf{(d)} shows the force of infection in the high value region from inside and outside the same region. The switch time is not simply when the force of infection from within becomes greater than that from outside the high value region.\label{fig:ch3:switch_strat}}
+    \end{center}
+\end{figure}
 
-Switching strategy description. Effect of beta on switch time --- intermediate infection rates lead to Switching.
+For most parameter sets, the optimal strategy found using either the direct or indirect approach prioritises control in the high value region (Figure~\ref{fig:ch3:general_strat}). The maximum control is allocated to the high value region, up to the maximum expenditure rate $M$, and any remaining resources are allocated to the buffer region. For some parameter sets however, the optimal strategy is a switching strategy (Figure~\ref{fig:ch3:switch_strat}). Early in the epidemic it is optimal to prioritise the buffer region, but it becomes optimal to switch back to prioritising the high value region later. For the ranges of parameters we considered here, we do not see strategies where priorities switch multiple times when budgets are limiting.
 
-Explain that switching is more than just FOI, i.e.\ it is not just switching when FOI internal to region 3 is larger than from region 2.
+A naive expectation might be that the strategy switch is caused by the region generating the larger force of infection on the high value region, i.e.\ the region dominating the infectious pressure is prioritised for control. However, the driver for switching priorities is not simply the force of infection on the high value region. As shown in Figure~\ref{fig:ch3:switch_strat}(d), the force of infection from within the high value region can be smaller than that from the buffer region at all times, but a switch is still optimal. The switching strategy is found for intermediate values of the infection rate (Figure~\ref{fig:ch3:beta_scan}). Low values of the infection rate are easy to manage, and so can be controlled simply by treating in the high value region. High infection rates give epidemics that spread rapidly, and so the more important value region must be prioritised to keep the epidemic under control there. At intermediate levels though, the disease spreads slowly enough to allow reduction of infectious pressure by treating in the buffer region, but quickly enough that this reduction of pressure from the buffer is necessary.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics{Graphics/Ch3/BetaScan}
+        \caption[Comparing numerical methods using the switching strategy]{Using the optimal switch time to compare the direct and indirect approaches. The default parameters are used with 5 hosts initially infected in the buffer region. \textbf{(a)} shows the switch time found by the direct (BOCOP) and indirect (FBSM) methods. Switching strategies are found at intermediate infection rates. In most cases the two methods agree, although in some cases the direct method finds an optimal switch where the indirect method does not. \textbf{(b)} shows a scan over the switch time for one of these cases. The optimal switch time is at 6.0 time units, with an associated epidemic cost of 23.20. For this value of $\beta$, the FBSM does not find a switch whereas BOCOP identifies the correct switch time of 6.0 units.\label{fig:ch3:beta_scan}}
+    \end{center}
+\end{figure}
 
 \subsection{Formulation comparison}
 
-Concept of using switch time as metric for comparing accuracy of direct and indirect formulations. Shows that both agree, although direct finds optimum in some cases where FBSM does not.
+The switch time, if there is one, can be easily extracted from an optimised solution, and so can be used to compare the direct and indirect approaches. Figure~\ref{fig:ch3:beta_scan}(a) shows that in general the two methods agree, but for some parameters the indirect FBSM does not find an optimal switching strategy where the direct method does. As shown in Figure~\ref{fig:ch3:beta_scan}(b), the direct method is more accurate as the switching strategy is optimal. Because of the difficulties with convergence using the indirect approach, the FBSM can converge on suboptimal solutions more frequently than the direct method.
 
-Additional difficulties of FBSM: convergence issues. Compare time to solve problem.
+Other convergence issues are also seen with the FBSM, causing significantly slower convergence than using the direct method. For example, the optimisation underlying the strategy in Figure~\ref{fig:ch3:general_strat} takes \SI{11.7}{\second} using the direct approach, whereas for the same time resolution the indirect approach takes \SI{98}{\second}. Both measurements were made using a \SI{4.0}{\giga\hertz} Intel Core i7-4790K with \SI{32}{\giga\byte} of RAM. In many cases the FBSM also fails to converge to a solution.
 
 \subsection{Parameter sensitivity}
 
-Effect of parameterisation on switching time. Initial conditions and external FOI.
+In this section we test the sensitivity of the switching strategies to parameterisation of the model. The effects of the maximum expenditure rate $M$ and the control rate $\eta$ are shown in Figure~\ref{fig:ch3:sens_2}. In these cases, as control becomes more effective either through an increased budget or faster treatment, the intermediate range over which a switching strategy is optimal shifts to higher values of the infection rate. The control is more effective and so the epidemic is easier to control, shifting the swiching strategies to faster spreading epidemics with higher infection rates.
 
-Effect of budget and control rates.
+Figure~\ref{fig:ch3:sens_1} shows the response of the switch time from the direct optimisation to the infection rate, the number of infected hosts initially in the buffer region, and the external force of infection. At low levels of initial infection and external force of infection, the switch strategy is optimal at intermediate infection rates, as found previously. As the rate of invasion in the buffer is increased, through more initial infection or a higher external force of infection, the range of infection rates over which a switching strategy is optimal decreases. For high rates of invasion in the buffer region a switching strategy is not optimal because the disease spreads faster in the buffer, and so control is less effective there than in the high value region. Note that for some values of the external force of infection, optimal strategies with additional switches are found.
+
+\begin{figure}[H]
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch3/ControlRatePolicy}}
+        \caption[Switch time sensitivity to control efficiency]{Effect of the control budget and control rate on the optimal switch time, using default parameters and one initially infected host in the buffer region. \textbf{(a)} and \textbf{(b)} show the effect of infection rate combined with the maximum budget and removal rate respectively. As control becomes more effective the range of infection rates over which a switch is optimal is shifted to higher values. The shape in \textbf{(a)} is caused by a change in regime between parameters where maximum control is possible and where the maximum expenditure rate is limiting.\label{fig:ch3:sens_2}}
+    \end{center}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch3/InitCondPolicy}}
+        \caption[Switch time sensitivity to spread rate]{Sensitivity of the optimal strategy to the rate of infection spread, using the direct method and default parameters. \textbf{(a)} shows the switch time as a function of the infection rate and the initial number of infected hosts in the buffer region. \textbf{(b)} shows the effect of the infection rate and the external force of infection on the buffer region, with a single initially infected host in the buffer region. The grey region shows cases where multiple switches are identified. For both \textbf{(a)} and \textbf{(b)}, as the epidemic invades faster in the buffer region (moving up the y axes) the switching strategy becomes less beneficial. The shape of the response is affected by where the maximum expenditure rate becomes limiting, with the budget becoming more limiting towards the upper right corners. A diagonal line separates regimes where maximum control is possible from cases where the maximum expenditure rate is limiting. Cases A, B and C are highlighted in \textbf{(b)}, and control expenditure and DPCs are shown for each of these in \textbf{(c)}, \textbf{(d)} and \textbf{(e)}. Case A finds a switch but as the budget is not limiting, it has no effect. In case B the budget is limiting so the switch has an effect. In case C there is an additional switch early in the epidemic, but since the budget is not limiting at that point it has no effect.\label{fig:ch3:sens_1}}
+    \end{center}
+\end{figure}
 
 \subsection{Testing robustness}
 
-Application of optimised control strategy to version of model with incorrectly parameterised infection rate. Leads to suboptimal control.
+Finally, we test how these optimal strategies perform when the underlying model is not known accurately. We introduce a systematic error into the infection rate of the model used to optimise the control strategy. The resulting optimal control specifies an expenditure over time ($f_i(t)I_i(t)$ for each region) which is applied to a model with the correct infection rate. The results are shown in Figure~\ref{fig:ch3:robust}. Larger errors in the infection rate lead to worse control of the epidemic. For large underestimates of the infection rate, the optimised control is worse than simply allocating the full budget to the high value region, with no treatment in the buffer region. The optimised control strategies lead to wasted resources that could be better allocated to the other region (Figure~\ref{fig:ch3:robust}(c)).
 
-Application to stochastic version of model.
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics{Graphics/Ch3/ErrorScan}
+        \caption[Effect of incorrect parameterisation on strategy performance]{Effect of incorrect parameterisation on the optimal control performance. Control is optimised using an incorrect infection rate, and the budget allocations applied to the correct model. The baseline parameters use the default values, with an infection rate of \SI{0.0028}{\per\host\per\t} and a maximum expenditure rate of \SI{5}{\hosts}, the same values as used for the switching strategy in Figure~\ref{fig:ch3:switch_strat}. \textbf{(a)} shows the epidemic cost as the percentage error in the infection rate is varied. Larger errors lead to worse performance, and can be worse than the simple strategy of full allocation to the high value region (shown in \textbf{(b)}). \textbf{(c)} shows the wasted control resources using an infection rate overestimated by \SI{20}{\percent}. Here too much control is allocated to the high value region that cannot be spent, and so is wasted. Similarly, not enough resources are allocated when the infection rate is underestimated, also leading to wasted control resources.\label{fig:ch3:robust}}
+    \end{center}
+\end{figure}
 
+\FloatBarrier
 \section{Discussion}
 
-Advantage of optimal control $\rightarrow$ finds less intuitive controls. But benefit of switching has to be balanced with addition costs of performing the switch.
+In this chapter we have shown how OCT can be used to find time-dependent control strategies. We have shown how OCT identifies less intuitive strategies, for example the switching strategy here. For the simple model considered here these optimal strategies could have been identified by an exhaustive scan over switch times, but for more complex models with more complex switching strategies this will not generally be true. Whilst the setting in this chapter was highly simplified, we can already see some of the potential limitations of these more complex strategies for practical use. Although not included in our analysis, there are additional costs associated with changing policy during an epidemic, i.e.\ switching region priorities in this chapter, and these costs must be balanced with the benefit to epidemic control. These costs could be included in the OCT objective function, for example by adding a term penalising rapidly changing controls.
 
-Connection to strategies found in other studies, e.g.\ \citet{ndeffo_mbah_resource_2011}.
+We have also shown how incorrect parameterisation can lead to less effective disease management, and in such cases it may even be better to use the simplest possible strategy rather than use OCT at all. Consideration of these uncertainties when determining the optimal strategy is important \citep{epanchin_controlling_2010}. A study by \citet{carrasco_optimal_2009} showed that when controlling invasive species, the optimal strategy when parameters are known precisely is not always optimal when parameter uncertainty is introduced. In these cases it is important to find a robust strategy that can handle any uncertainty present.
 
-General control strategies $\rightarrow$ bang-bang switching controls. Effect of getting switch time wrong, limited by simplicity of model.
+The strategies we have identified are similar to those found in other plant disease studies, despite our unusual objective of protecting a single region. For example, \citet{ndeffo_mbah_resource_2011} found that disease management across sub-populations is most efficient when a switching strategy is employed, first allocating resources to the more infected group and later switching to treat the less infected group. A similar strategy is found by \citet{ndeffo_mbah_optimization_2010} for management of sudden oak death. Similar switching strategies have also been found more broadly for: management of invasive species \citep{carrasco_optimal_2009}, distribution of prophylactic vaccines in a spatially structured population \citep{keeling_optimal_2012}, and switching between immunisation and palliative care during an epidemic when resources are limited \citep{klepac_optimizing_2012}.
 
-Comparison of methods shows that direct formulation is more robust, and much simpler to implement. Therefore use this going forwards.
+The type of control strategy identified here, a bang-bang switching control, can be sensitive to precise knowledge about the optimal switch time. \citet{forster_optimizing_2007} showed that when applying control optimised using a mean-field model of an epidemic to a spatially-explicit model, errors in the switch time can lead to performance that is worse than a simple constant strategy. Similarly, we showed here that incorrect parameterisation can lead to ineffective disease management. The accuracy of the underlying model used for optimisation is limiting the practical applicability of the resulting strategies.
 
+In this chapter we also compared the direct and indirect formulations for solving the optimal control problem. We found that the direct method in some cases finds superior switching strategies, and is also more robust and reliable than the indirect method. This means that the direct method is more likely to converge, whereas convergence using the indirect approach can be highly sensitive to parameters. The direct method is also simpler to implement, particularly when considering constraints that mix state and control variables. Other studies have also found that the direct method is more robust and reliable \citep{betts_practical_2010}, but results from the indirect method can be more accurate when they do converge \citep{rao_survey_2009}. In this chapter the accuracy of the direct and indirect approaches has been comparable when both methods converge, but if additional accuracy is required the results from the direct method could be used to initialise an indirect method \citep{von_direct_1992}. The purpose of this thesis is to find robust and practical management strategies, and so the direct approach is most appropriate. Overall, we will therefore use the direct method going forward in this thesis.
+
+% \newpage
 \section{Conclusions}
 
-Switching important; direct methods better; results from simplified model do not stand up when complexity added.
+We have shown that switching strategies can be important when considering management strategies to protect a specific high value region. Direct approaches to numerically optimising the strategy perform better than indirect approaches, giving faster and more reliable convergence and more accurate results. However, the optimal strategies do not always perform well when there is inaccuracy in the parameters underlying the model. New frameworks are needed to make use of the OCT results when accounting for uncertainties and complexities in the real world.

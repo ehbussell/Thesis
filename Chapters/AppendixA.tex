@@ -1,0 +1,35 @@
+\chapter{Appendix to Chapter 4\label{app:mle_sse}}
+
+\section{Alternative fitting methods for network model}
+
+The best-fitting spatial deterministic model leads to disease progress curves in regions B and C that rise more quickly than the mean of the stochastic simulations, although the epidemic size within each region closely matches the simulations. This is because it is impossible for a deterministic model where the rates are fitted via maximum likelihood to adequately capture the dynamics of an epidemic in which the following three conditions are satisfied:
+\begin{enumerate}
+\item{}there is initially no infection;
+\item{}there is a very small force of infection into the region;
+\item{}there are relatively fast within-region dynamics once disease has entered.
+\end{enumerate}
+These conditions are true inside regions B and C and so we see reduced rate of spread in the stochastic case. This effect is due to stochastic fade outs after introduction events, as well as negative covariance between susceptible and infected hosts, leading to reduced infection rates in the simulations \cite[pp.~227--229 and pp.~238--240]{keeling_modeling_2008}. Figure~\ref{fig:time_lag} demonstrates that this effect is seen in the simplest case of a metapopulation model with no risk structure. The rates are directly lifted from simulation to approximation to show the effect is purely due to the difference between deterministic and stochastic analogues. We also tested that our fitting procedures give these same values (data not shown).
+
+\begin{figure}
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch4/CouplingTimeLag}}
+        \caption[Time lags in deterministic and stochastic analogues]{Illustration of increased rate of spread in deterministic models when coupling is small. In this figure we use a 3 patch metapopulation model, with well-mixed dynamics within regions and coupling between regions A and B, and B and C. There is no risk structure. \textbf{(a)} shows the difference in peak infection time for deterministic and stochastic versions of the model with identical rates. Positive values indicate the deterministic model peaks earlier. Dots give the mean of 1000 stochastic simulations, with error bars showing the 95th percentile. \textbf{(b)} shows median stochastic dynamics and deciles in red, and deterministic disease progress curve in black, for a high coupling value ($10^{-4}$). The same is shown in \textbf{(c)} for a low coupling value ($10^{-5}$)}
+        \label{fig:time_lag}
+    \end{center}
+\end{figure}
+
+The spatial approximate model could be extended and improved to account for these effects, for example by making use of moment closure techniques \citep{keeling_effects_1999} or nonlinear force of infection terms \citep{roy_representing_2006} as used by Clarke \etal\ \citep{clarke_approximating_2013} and Stroud \etal\ \citep{stroud_semi-empirical_2006}, but we here focus on simplicity. Despite the limitations of the deterministic models, our proposed control frameworks allow the resulting controls to be used practically and successfully, particularly when approximating models are repeatedly reset. Since the benefits of the control frameworks should not depend on the exact fitting process used, we also fitted both approximate models by minimising the sum of squared errors from the simulation disease progress curves. For the risk based model the following sum of squared errors was minimised:
+\begin{linenomath*}
+\begin{equation}
+    \mathrm{SSE} = \sum_{i,j}\left(\Delta{}I_i^\mathrm{H}(t_j)\right)^2 + \left(\Delta{}I_i^\mathrm{L}(t_j)\right)^2
+\end{equation}
+\end{linenomath*}
+where $\Delta{}I_i^\mathrm{r}(t_j)$ is the difference in the number of infected hosts in risk group $r$ between the approximate model and simulation realisation $i$ at time $t_j$. The sum is over all simulation realisations and across 51 times over the simulation time. The equivalent SSE function was used for the spatial approximate model, but summing differences for each region as well. Using this alternative fitting process did not change the ordering of control strategies as seen in Figure~\ref{fig:ch4:obj_values} in the main text (Figure~\ref{fig:sse_violin}).
+
+\vspace*{2cm}
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics{Graphics/Ch4/SSE_Violin}
+        \caption[Comparing control strategies with alternative fitting method]{Results of different control optimisation schemes on the illustrative simulation model using approximate models fitted by minimising SSE\@. Spatial MPC still performs best.\label{fig:sse_violin}}
+    \end{center}
+\end{figure}

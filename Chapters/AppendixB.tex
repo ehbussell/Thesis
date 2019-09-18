@@ -1,0 +1,74 @@
+\chapter{Appendix to Chapter 6\label{app:mixed_stand}}
+
+\section{Parameter uncertainty scenarios\label{app:mixed_stand_1}}
+
+
+In Figure~\ref{fig:ch6:param_uncert}(c)--(d) in Chapter~\ref{ch:protect_tanoak_control}, reproduced for convenience in Figure~\ref{fig:param_uncert_repeat} below, 4 scenarios were highlighted to show the differences between open-loop and MPC under different parameter sets.
+\begin{description}
+    \item[Scenario 1] Open-loop performs badly, MPC is significantly better.
+    \item[Scenario 2] Average open-loop performance, moderate improvement by using MPC.
+    \item[Scenario 3] Good performance using open-loop, marginal decrease in performance using MPC
+    \item[Scenario 4] Good performance using open-loop, marginal increase in performance using MPC
+\end{description}
+Figures~\ref{fig:case1}--\ref{fig:case4} and the captions describe the situation in each scenario, explaining what drives the differences in performance.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics{Graphics/Ch6/ParamUncertRepeat}
+        \caption[Repeat of Figure~\ref{fig:ch6:param_uncert}(c)--(d) for reference]{Repeat of Figure~\ref{fig:ch6:param_uncert}(c)--(d) from Chapter~\ref{ch:protect_tanoak_control}. \textbf{(c)} shows the distribution of objective values using open-loop and MPC across 200 draws of simulation parameters. \textbf{(d)} shows the absolute improvement of the MPC strategy over open-loop, as a function of the open-loop objective.\label{fig:param_uncert_repeat}}
+    \end{center}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch6/Case1}}
+        \caption[Parameter uncertainty scenario 1]{Scenario 1. For each scenario, the open-loop control strategy and host dynamics are shown in \textbf{(a)} and \textbf{(b)}, and the same for MPC in \textbf{(c)} and \textbf{(d)}. The blue bars to the right of \textbf{(b)} and \textbf{(d)} highlight the difference between the simulation and approximate models in the number of large tanoak at the final time. \textbf{(e)} shows the large tanoak dynamics when there is no control compared with the baseline parameter case. Here, open-loop performs poorly because the disease spreads quickly, leading to significant tanoak decline in the first 20--40 years. \textbf{(e)} shows decline is faster than in the baseline case. In MPC, the framework can respond to this early decline and keep the disease under control.\label{fig:case1}}
+    \end{center}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch6/Case2}}
+        \caption[Parameter uncertainty scenario 2]{Scenario 2. Here, under open-loop the approximate model slowly degrades and leads to differences between the simulation and approximate models. The control is relatively effective, but is not informed by the correct simulation state. Under MPC the approximate model is kept much closer to the simulation, leading to more informed control and better performance. \textbf{(e)} shows that tanoak decline under no control is similar to the baseline case.}
+    \end{center}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch6/Case3}}
+        \caption[Parameter uncertainty scenario 3]{Scenario 3. The disease is slow to spread, and therefore relatively easy to control. The approximate model stays close to the simulation under both open-loop and MPC as there are only small amounts of disease spread. The different thinning regime under MPC leads to slightly worse retention of tanoak than under open-loop, but the difference is very small. \textbf{(e)} shows that tanoak decline under no control is slower than in the baseline case.}
+    \end{center}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch6/Case4}}
+        \caption[Parameter uncertainty scenario 4]{Scenario 4. The disease is very easy to control, leading to minimal roguing under both frameworks. The thinning of redwood under MPC is better informed after the update time at 20 years, and so promotes additional recovery of tanoak. Here both frameworks increase the size of the tanoak population above the pre-disease introduction level. \textbf{(e)} shows that tanoak decline under no control is much slower than in the baseline case.\label{fig:case4}}
+    \end{center}
+\end{figure}
+
+\newpage
+\section{Efficacy of protectant methods\label{app:mixed_stand_2}}
+
+In the Section~\ref{sec:ch6:discussion_practical} we stated that the protectant methods are unlikely to be applied in practice since they have a very small effect on the overall objective. We here verify this by running the MPC strategy with and without the protectant methods, as shown in Figure~\ref{fig:effect_protectant}. The protectant application marginally increases the objective function, but the effect is negligible.
+
+\vspace*{\floatsep}
+\begin{figure}[H]
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch6/ProtectantEfficacy}}
+        \caption[Efficacy of protectant methods]{Under the MPC framework, applying protectant methods does not have a significant effect on the control performance. \textbf{(a)} and \textbf{(b)} show the control and host dynamics under the standard MPC framework. \textbf{(c)} and \textbf{(d)} show the same but where the protectant method is not applied. Note that control expenditure, in particular for roguing, is not the same since the number of hosts has changed. \textbf{(e)} shows the objective function for MPC with and without protectant methods. The total objective values are 0.7996 (4~s.f.) and 0.7938 (4~s.f.) with and without protectant application respectively.\label{fig:effect_protectant}}
+    \end{center}
+\end{figure}
+
+\newpage
+\section{Extended time horizon\label{app:mixed_stand_3}}
+
+The 100 year time horizon was chosen to be long enough to capture tanoak decline, and show the differences between the open-loop and MPC frameworks. We here extend the time horizon by 3 MPC update periods to 160 years to verify that the difference between the frameworks is robust in the longer term. Figure~\ref{fig:extend_time_horizon} shows the control strategies and host dynamics for both open-loop and MPC over this longer time horizon. The MPC framework does show tanoak decline from late re-emergence, but this is delayed compared to open-loop. After 160 years, tanoak is largely extinct under open-loop and tanoak numbers are still decreasing, but the MPC framework retains a stable population of large, healthy tanoak which is just beginning to increase in size.
+
+\vspace*{\floatsep}
+\begin{figure}[H]
+    \begin{center}
+        \makebox[\textwidth][c]{\includegraphics{Graphics/Ch6/ExtendedTimeHorizon}}
+        \caption[Extending the time horizon]{Open-loop and MPC control strategies, and host dynamics, using a time horizon of 160 years. \textbf{(a)} and \textbf{(b)} are the control strategy and host dynamics for open-loop, \textbf{(c)} and \textbf{(d)} show the same for MPC. More tanoak is retained using MPC, and the population has stabilised. MPC slows down the tanoak decline seen using the open-loop framework.\label{fig:extend_time_horizon}}
+    \end{center}
+\end{figure}

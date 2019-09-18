@@ -1,0 +1,114 @@
+\chapter{Appendix to Chapter 7\label{app:redwood}}
+
+\section{Parameter and variable values\label{app:redwood_params}}
+
+{\renewcommand{\arraystretch}{1}
+\begin{table}[H]
+    \centering
+    \caption[Table of parameter and variable meanings and default values]{Table of parameter and variable meanings and default values.}
+    \begin{tabular}{@{}lp{9.5cm}l@{}}
+        \toprule
+        \textbf{Symbol} & \textbf{Meaning} & \textbf{Default value} \\
+        \midrule
+        $\beta$ & Maximum spore production rate from each infected host unit & \SI{4.55}{\per\week}\\
+        $\gamma$ & Proportion of dispersal events distributed using short range kernel & \num{0.9947}\\
+        $\alpha_1$ & Scale parameter for long range kernel & \SI{9.504}{\km}\\
+        $\alpha_2$ & Scale parameter for short range kernel & \SI{20.57}{\meter}\\
+        $\eta$ & Maximum total control rate & \SI{50}{\km\squared\per\year}\\
+        \midrule
+        $\chi(f_i(t))$ & Indicator for pathogen conduciveness in cell $i$ of forest type $f_i$ at time $t$ & 0 or 1\\
+        $m_{it}$ & Pathogen conduciveness due to moisture for cell $i$ at time $t$ & $\left[0, 1\right]$\\
+        $c_{it}$ & Pathogen conduciveness due to temperature for cell $i$ at time $t$ & $\left[0, 1\right]$\\
+        $M_i$ & Averaged pathogen conduciveness due to weather and forest type mask for cell $i$ & $\left[0, 1\right]$\\
+        $N_{\text{max}}$ & Maximum number of host units in any single simulation cell & \num{100}\\
+        $S_{it}$ & Number of susceptible host units in simulation cell $i$ at time $t$ & $\left[0, N_\text{max}\right]$\\
+        $I_{it}$ & Number of infected host units in simulation cell $i$ at time $t$ & $\left[0, N_\text{max}\right]$\\
+        $K_{ji}$ & Probability of spore dispersal from cell $i$ to cell $j$ & $\left[0, 1\right]$\\
+        \midrule
+        $\tilde{\beta}$ & Fitted infection rate in approximate model & -\\
+        $\tilde{S_i}$ & Number of susceptible hosts in aggregated cell $i$ in approximate model & -\\
+        $\tilde{I_i}$ & Number of infected hosts in aggregated cell $i$ in approximate model & -\\
+        $k_{ij}$ & Dispersal kernel between cells $i$ and $j$ in approximate model & $\left[0, 1\right]$\\
+        $u_i(t)$ & Thinning intensity at time $t$ in cell $i$ of the approximate model & $\left[0, 1\right]$\\
+        $v_i(t)$ & Roguing intensity at time $t$ in cell $i$ of the approximate model & $\left[0, 1\right]$\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+}
+
+\section{Approximate model fitting results\label{app:redwood_fits}}
+
+{\renewcommand{\arraystretch}{1}
+\begin{table}[H]
+    \centering
+    \caption[Table of approximate model fitted parameters]{Table of approximate model fitted parameters. All values are give to 3 significant figures.}
+    \begin{tabular}{@{}lllll@{}}
+        \toprule
+        & \multicolumn{2}{c}{\textbf{Exponential kernel}} & \multicolumn{2}{c}{\textbf{Cauchy kernel}}\\
+        \cmidrule(lr){2-3}
+        \cmidrule(lr){4-5}
+        \textbf{Resolution (\si{\meter})} & $\tilde{\beta_1}$ (\si{\per\host\per\t}) & $\sigma_1$ (\si{\meter}) & $\tilde{\beta_2}$ (\si{\per\host\per\t}) & $\sigma_2$ (\si{\meter}) \\
+        \midrule
+        250 & 0.617 & 1090 & 0.0787 & 41.0 \\
+        500 & 0.156 & 1100 & 0.022 & 91.6 \\
+        1000 & 0.0392 & 1060 & 0.00626 & 189 \\
+        1500 & 0.0164 & 1110 & 0.003 & 299 \\
+        2000 & 0.00856 & 1220 & 0.00175 & 404 \\
+        2500 & 0.00506 & 1310 & 0.00116 & 506 \\
+        5000 & 0.000944 & 1830 & 0.000383 & 1420 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+}
+
+\section{Problem formulation\label{app:redwood_form}}
+
+Here we show how the non-linear programming problem (NLP) was formulated for optimising spatial control to protect Redwood National Park in Chapter~\ref{ch:redwood}. The raster based disease system is described by 2 ODEs for each cell in the landscape:
+\begin{subequations}
+    \label{eqn:appB:approx_model}
+    \begin{align}
+        \dot{S}_i &= -\tilde{\beta}M_iS_i\sum_j\left(k_{ij}M_jI_j\right) - u_i(t)\eta{}S_i\\
+        \dot{I}_i &= \tilde{\beta}M_iS_i\sum_j\left(k_{ij}M_jI_j\right) - v_i(t)\eta{}I_i
+    \end{align}
+\end{subequations}
+where the variables are as described in Chapter~\ref{ch:redwood}. As explained in Chapter~\ref{ch:oct}, the direct method discretises the system of ODEs and optimises these variables subject to constraints that impose the correct dynamics. In our case, for a system of $N$ cells discretised on a grid of $M+1$ time points, the vector of NLP variables to optimise is given by:
+\begin{equation}
+    \begin{split}
+    \vect{y}^\mathrm{T} = \bigl({}&S_0^0, I_0^0, u_0^0, v_0^0, \ldots S_N^0, I_N^0, u_N^0, v_N^0, \\
+    & S_0^1, I_0^1, u_0^1, v_0^1, \ldots S_N^1, I_N^1, u_N^1, v_N^1, \\
+    & \qquad\ldots S_N^M, I_N^M, u_N^M, v_N^M\bigr)
+    \end{split}
+\end{equation}
+where subscripts indicate the cell and superscripts indicate the time point.
+
+Constraints must now be formulated to impose the dynamics of the ODE system on these NLP variables. Because of the size of the NLP problem, we use a simple midpoint discretisation method. For an ODE system $\dot{x} = f(t, x(t))$, the implicit midpoint method is given by:
+\begin{equation}
+    x_{n+1} = x_n + hf\left(t_n+\frac{h}{2}, \frac{1}{2}(x_n+x_{n+1})\right)
+\end{equation}
+where $h$ is the step size, such that $t_n=t_0+nh$, and $y_n$ is the approximation of $y(t_n)$ \citep[p.~100]{betts_practical_2010}.
+
+For our system, applying the midpoint method results in the following state dynamics constraints:
+\begin{subequations}
+    \label{eqn:appB:dyn_constraints}
+    \begin{align}
+        \begin{split}
+        S_i^{n+1} &= S_i^n - h\Bigl[\tilde{\beta}\frac{1}{2}\left(S_i^n + S_i^{n+1}\right)\sum_jM_iM_jk_{ij}\frac{1}{2}\left(I_j^n + I_j^{n+1}\right)\\
+        &\hspace{2.5cm} + \eta{}\frac{1}{2}\left(u_i^n + u_i^{n+1}\right)\frac{1}{2}\left(S_i^n + S_i^{n+1}\right)\Bigr]
+        \end{split}\\
+        \begin{split}
+            I_i^{n+1} &= I_i^n + h\Bigl[\tilde{\beta}\frac{1}{2}\left(S_i^n + S_i^{n+1}\right)\sum_jM_iM_jk_{ij}\frac{1}{2}\left(I_j^n + I_j^{n+1}\right)\\
+            &\hspace{2.5cm} - \eta{}\frac{1}{2}\left(v_i^n + v_i^{n+1}\right)\frac{1}{2}\left(I_i^n + I_i^{n+1}\right)\Bigr]\;.
+            \end{split}
+    \end{align}
+\end{subequations}
+Alongside the initial condition constraints, and bounds on the control variables, these form the full constraint system for the NLP problem. These constraints are differentiated with respect to the NLP variables to give the Jacobian of the problem, and differentiated again to form the Hessian.
+
+\section{Problem optimisation\label{app:redwood_opt}}
+
+The NLP variables are optimised to maximise the number of healthy hosts at the final time, with a varying weight for each cell. In terms of the NLP variables, this objective function is given by:
+\begin{equation}
+    J = \sum_iW_iS_i^M
+\end{equation}
+where the weight for cell $i$ is given by $W_i$, and time point $M$ is at the final time.
+
+The problem is optimised using Ipopt \citep{wachter_implementation_2006}, an open source interior point optimiser designed for large-scale non-linear optimisation. The constraint system, objective function, and their derivatives are implemented in \CC{} as an interface to the Ipopt software.
