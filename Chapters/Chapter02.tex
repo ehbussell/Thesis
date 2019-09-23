@@ -10,7 +10,7 @@ In this chapter we review the use of OCT in the epidemiology literature. We firs
 
 \section{Background}\label{sec:ch2:background}
 
-Optimal control theory (OCT) is the field of mathematics concerned with finding time-varying inputs to dynamic systems, optimised to maximise (or minimise) some performance metric. Whilst the standard approach applies to ODEs,  the dynamical system could also be a system of PDEs, or difference equations. The system is controlled by an input variable, or combination of variables, that can be varied from outside the system to adjust the dynamics. The field developed as an extension to the calculus of variations, with roots also in classical control theory, random processes, and linear and nonlinear programming \citep{bryson_optimal_1996}. In the 1950s, Bellman developed dynamic programming, a method for finding optimal controls by recursively solving smaller problems \citep{bellman_dynamic_1957}. These methods struggle to solve realistic problems because of the `curse of dimensionality', where, as the number of state and control variables increases, the memory required to solve the recursive problem becomes impractical.
+Optimal control theory (OCT) is the field of mathematics concerned with finding time-varying inputs to dynamical systems, optimised to maximise (or minimise) some performance metric. Whilst the standard approach applies to ODEs,  the dynamical system could also be a system of PDEs, or difference equations. The system is controlled by an input variable, or combination of variables, that can be varied from outside the system to adjust the dynamics. The field developed as an extension to the calculus of variations, with roots also in classical control theory, random processes, and linear and nonlinear programming \citep{bryson_optimal_1996}. In the 1950s, Bellman developed dynamic programming, a method for finding optimal controls by recursively solving smaller problems \citep{bellman_dynamic_1957}. These methods struggle to solve realistic problems because of the `curse of dimensionality', where, as the number of state and control variables increases, the memory required to solve the recursive problem becomes impractical.
 
 Later work by \citet{pontryagin_mathematical_1962} extended work from the calculus of variations to find a necessary condition for the maximising path. Since whether an individual control-state trajectory satisfies the condition can be tested, this method avoids the `curse of dimensionality' with the Bellman equation. There is no need to recurse over the entire state space. The necessary condition is contained in Pontryagin's famous `maximum principle', the main theory underlying much of OCT\@. We will now summarise this principle as it applies to ODEs, but we do not describe the mathematics here. Further details can be found in \citet{lenhart_optimal_2007} or \citet{hocking_optimal_1991}.
 
@@ -103,7 +103,7 @@ As OCT was increasingly used within epidemiology, the underlying models increase
 
 \subsubsection{Bioeconomics}
 
-Throughout its history, OCT has been closely connected with the field of economics \citep{weber_optimal_2011}, for example in fisheries economics \citep{clark_economics_1975}. Consideration of economics is important for optimising epidemiological controls \citep{perrings_merging_2014}, since interventions must be cost-effective, and resources are often limited. In one study, OCT was used to find cost-effective human papillomavirus vaccination strategies \citep{brown_role_2011}, showing how time-dependent strategies can be found that balance the costs of administering vaccines with the costs of treating infected individuals. In plant epidemiology, a recent study shows how control strategies for vector transmitted diseases can balance multiple economic costs \citep{bokil_optimal_2019}, including control costs, yield loss and long term costs from insecticide use. Work on sudden oak death has shown how OCT can find an optimal balance when allocating limited resources between surveillance and eradication measures \citep{ndeffo_mbah_balancing_2010}.
+Throughout its history, OCT has been closely connected with the field of economics \citep{weber_optimal_2011}, for example in fisheries economics \citep{clark_economics_1975}. Consideration of economics is important for optimising epidemiological controls \citep{perrings_merging_2014}, since interventions must be cost-effective, and resources are often limited. In one study, OCT was used to find cost-effective human papillomavirus vaccination strategies \citep{brown_role_2011}, showing how time-dependent strategies can be found that balance the costs of administering vaccines with the costs of treating infected individuals. In plant epidemiology, a recent study shows how control strategies for vector transmitted diseases can balance multiple economic costs \citep{bokil_optimal_2019}, including control costs, yield loss and long-term costs from insecticide use. Work on sudden oak death has shown how OCT can find an optimal balance when allocating limited resources between surveillance and eradication measures \citep{ndeffo_mbah_balancing_2010}.
 
 Bioeconomic studies, such as the ones considered in the previous paragraph, rely on a clearly defined objective of control, with all costs quantified in the same units. By setting the relative contributions for each cost term, for example surveillance, vaccination and treatment costs, the objective function chosen defines what is to be considered cost-effective. \citet{epanchin-niell_economics_2017} argues that in bioinvasion management a key gap in current understanding is how to value environmental benefits, such as ecosystem services and biodiversity, alongside the costs and effectiveness of controls. The same difficulties are present in the epidemiological literature, but improved valuation and consideration of these services in determining control strategies are urgently required \citep{boyd_consequence_2013}. Choosing an objective function that balances costs meaningfully is important, since the choice of the objective function can make significant changes to the optimal strategy \citep{probert_decision_2016}. In human disease, cost-effectiveness analyses are often based on quality adjusted life years \citep{whitehead_health_2010}. A similar concept could perhaps be used for plant and animal diseases, including calculations of yield losses \citep{savary_crop_2012, savary_global_2019} as well as effects on welfare, biodiversity and tourism for example \citep{boyd_consequence_2013}.
 
@@ -127,6 +127,7 @@ More specifically, since the initial conditions for the state system, and the te
 
 The FBSM is based in the necessary conditions for optimality. This means that the results are closely connected to the underlying mathematics of the optimal control theory. This can help to give more insight into the meaning of the resulting controls, since the underlying dynamics that influence the control are analytically described. In some cases this may help to make general statements about the nature of optimal control that could lead to a rule of thumb. For example, \citet{sethi_optimal_1978} showed that there can be at most a single switch in the optimal strategy, a general statement that could not be found from numerical solutions. There are however, a number of limitations to using the indirect formulation. Firstly, this close connection to the optimality conditions means that significant work is necessary to set up the optimisation problem. The Hamiltonian, adjoint dynamics, and transversality conditions must all be derived. This can be mathematically challenging, and is inherently inflexible since the equations must be derived for each new problem \citep{betts_practical_2010}. Further to this, there can be issues with the convergence of the FBSM\@. The convergence can be highly sensitive to the initial guess for the optimal control, and the method may never converge to a solution \citep{betts_practical_2010}.
 
+\vspace*{\floatsep}
 \begin{algorithm}[h]
     \caption{The forward-backward sweep method (FBSM) algorithm from \citet{lenhart_optimal_2007}, for solving optimal control problems using the indirect formulation.\label{alg:ch2:fbsm}}
     \begin{enumerate}
@@ -148,7 +149,7 @@ It may seem excessive to be directly optimising all the state variables, but bec
 \end{equation}
 Using an Euler discretisation scheme, the state ODEs ($\dot{\vect{x}} = \vect{f}(\vect{x}, \vect{u}, t)$) can be approximated by the following NLP constraints:
 \begin{equation}
-    \vect{0} = \vect{x}_{k+1} - \vect{x}_k -h_k\vect{f}_k \equiv \vect{c}(\vect{y})
+    \vect{0} = \vect{x}_{k+1} - \vect{x}_k -h_k\vect{f}_k \equiv \vect{c}(\vect{y})\;.
 \end{equation}
 The NLP variables $\vect{y}$ are then optimised subject to the constraints $\vect{c}(\vect{y})$ using an NLP solver.
 
@@ -186,7 +187,7 @@ The advantages of the direct over the indirect formulation are in its flexibilit
     {
     \centering
     \captionsetup{type=figure}
-        \includegraphics[width=0.95\textwidth]{Graphics/Ch2/Example_indirect}
+        \includegraphics{Graphics/Ch2/Example_indirect}
     \caption[Optimal roguing strategy using the indirect approach]{Solution to the optimal roguing problem using the FBSM approach. Control is initiated at zero, and in 39 iterations converges to a switching, bang-bang control as shown in \textbf{(a)}. \textbf{(b)} and \textbf{(c)} show the state and adjoint systems corresponding to the optimal control.\label{fig:ch2:sir_indirect}}
     }
 
@@ -216,7 +217,7 @@ The advantages of the direct over the indirect formulation are in its flexibilit
     {
         \vspace*{1cm}
         \captionsetup{type=figure}
-        \centering \includegraphics[width=0.95\textwidth]{Graphics/Ch2/Example_direct}
+        \centering \includegraphics{Graphics/Ch2/Example_direct}
         \caption[Optimal roguing strategy using the direct approach]{Solution to the optimal roguing problem using the direct transcription approach. Dashed lines show the indirect solution found previously. Numerical inaccuracies in the Euler approximation used lead to small differences between the methods, but both approaches converge on the same solution. The direct method loses some accuracy, but does not require computation of the adjoint system or the Hamiltonian.\label{fig:ch2:sir_direct}}
     }
 

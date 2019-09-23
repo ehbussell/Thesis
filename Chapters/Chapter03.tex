@@ -36,7 +36,7 @@ where the subscripts $B$ and $V$ refer to the buffer and high value patches resp
 
 \subsection{Optimal control problem}
 
-The objective of control in this system is to protect the high value region from infection. Optimisation of the roguing strategy should minimise the impact of the pathogen in the high value region. We choose an objective of minimising the number of infected and removed hosts at the terminal time $T$. The population size is constant in each region, so this is equivalent to maximising the number of healthy and susceptible hosts that are retained in the high value region. We impose a restriction on the number of hosts that can be rogued per unit time to capture the economic and logistical limitations of disease management. The maximum expenditure rate, or number of hosts treated per unit time across both patches, is given by $M$. This gives the following optimal control problem:
+The objective of control in this system is to protect the high value region from infection. Optimisation of the roguing strategy should minimise the impact of the pathogen in the high value region. We choose an objective of minimising the number of infected and removed hosts at the terminal time $T$. The population size is constant in each region, so this is equivalent to maximising the number of healthy and susceptible hosts that are retained in the high value region. We impose a restriction on the number of hosts that can be rogued per unit time to capture the economic and logistical limitations of disease management. The maximum expenditure rate, or number of hosts that can be rogued at any time across both patches, is given by $M$. This gives the following optimal control problem:
 \begin{subequations}\label{eqn:ch3:opt_problem}
     \begin{align}
         \min_{f_i(t)} \quad{} &\null J = N_V(T) - S_V(T) \label{eqn:ch3:opt_problem_a}\\
@@ -82,7 +82,7 @@ In the indirect formulation, the Pontryagin maximum principle is used to set up 
 \begin{subequations}\label{eqn:ch3:adjoint_hamiltonian}
     \begin{align}
         \dot{\vect{\lambda}} &= -\frac{\partial{}H}{\partial\vect{x}} \label{eqn:ch3:adjoint_hamiltonian_a}\\
-        H &= \vect{\lambda}\cdot\vect{x} \label{eqn:ch3:adjoint_hamiltonian_b}
+        H &= \vect{\lambda}\cdot\dot{\vect{x}} \label{eqn:ch3:adjoint_hamiltonian_b}
     \end{align}
 \end{subequations}
 where $\vect{x}$ is the state system, defined for this system in Equations~\ref{eqn:ch3:patch_model}. The terminal conditions of the adjoint system are defined from the payoff function $\phi(T)$:
@@ -118,9 +118,9 @@ the Hamiltonian is then given by:
     \end{align}
 \end{subequations}
 
-The function $g(\vect{x}, \vect{\lambda})$ is therefore independent of the control, showing that the Hamiltonian is linear in each control function. In the control update step the control inputs are chosen so as to minimise the Hamiltonian at each time. Since the Hamiltonian is linear in the control this leads to bang-bang control, where control is either maximal or minimal. To take into account the budget constraint, the Hamiltonian is minimised at each time point by solving a linear programming problem subject to the constraint. This specifies the new control at each time point which is then used in the next iteration of the FBSM algorithm.
+The function $g(\vect{x}, \vect{\lambda})$ is therefore independent of the control, showing that the Hamiltonian is linear in each control function. In the control update step the control inputs are chosen so as to minimise the Hamiltonian at each time. Since the Hamiltonian is linear in the control this leads to bang-bang control, where control is either maximal or minimal. To take into account the budget constraint, the Hamiltonian is minimised by solving a linear programming problem at each time point subject to the constraint. This specifies the new control at each time point which is then used in the next iteration of the FBSM algorithm.
 
-The adjoint dynamics are derived from this Hamiltonian using Equation~\ref{eqn:ch3:adjoint_hamiltonian_b}. These are found to be:
+The adjoint dynamics are derived from this Hamiltonian using Equation~\ref{eqn:ch3:adjoint_hamiltonian_a}. These are found to be:
 \begin{subequations}\label{eqn:ch3:adjoint_dynamics}
     \begin{align}
     \dot{\lambda}_{S_B} &= \left(\lambda_{S_B} - \lambda_{I_B}\right)\left(\mathcal{F} + \beta{}I_B+\beta\epsilon{}I_V\right) \label{eqn:ch3:adjoint_dynamics_a} \\
@@ -142,25 +142,25 @@ The budget constraint is given by $h$:
 Let us define a new state variable $y$ with the following dynamics:
 \begin{subequations}
     \begin{align}
-    \dot{y} &= h^2H(h)\\
+    \dot{y} &= h^2\theta(h)\\
     y(0) &= 0
     \end{align}
 \end{subequations}
-where $H(\cdot)$ is the Heaviside step function (with $H=1$ for $h\geq0$). This term is zero when the constraint is adhered to, and is positive when there is constraint violation. We then add to the objective function a penalty term based on this state variable:
+where $\theta(\cdot)$ is the Heaviside step function (with $\theta=1$ for $h\geq0$). This term is zero when the constraint is adhered to, and is positive when there is constraint violation. We then add to the objective function a penalty term based on this state variable:
 \begin{equation}
     J = \left(N_V(T) - S_V(T)\right)\begingroup\color{ctcoloraccessory} + \frac{1}{2}Cy(T)^2 \endgroup
 \end{equation}
 where $C$ is a positive constant. The minimal value of the second term is zero, corresponding to no constraint violation. Defining a new adjoint variable $\lambda_y$ for $y$, the Hamiltonian is now given by:
 \begin{equation}
-    H = g(\vect{x}, \vect{\lambda}) - \lambda_{I_B}\eta{}I_Bf_B - \lambda_{I_V}\eta{}I_Vf_V \begingroup\color{ctcoloraccessory} + \lambda_yh^2H(h)\endgroup\;.
+    H = g(\vect{x}, \vect{\lambda}) - \lambda_{I_B}\eta{}I_Bf_B - \lambda_{I_V}\eta{}I_Vf_V \begingroup\color{ctcoloraccessory} + \lambda_yh^2\theta(h)\endgroup\;.
 \end{equation}
 
 The adjoints for the susceptible classes are unchanged, but the infected class adjoints are affected. These, and the dynamics of $\lambda_y$ are now given by:
 \begin{subequations}\label{eqn:ch3:mixed_adjoint_dynamics}
     \begin{align}
     \dot{\lambda}_y &= 0 \\
-    \dot{\lambda_{I_B}} &= \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta{}S_B + \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta\epsilon{}S_V + \lambda_{I_B}\left(\mu + f_B\eta\right) \begingroup\color{ctcoloraccessory} - 2\lambda_yhH(h)f_B \endgroup \\
-    \dot{\lambda}_{I_V} &= \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta{}S_V + \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta\epsilon{}S_B + \lambda_{I_V}\left(\mu + f_V\eta\right) \begingroup\color{ctcoloraccessory} - 2\lambda_yhH(h)f_V \endgroup\;.
+    \dot{\lambda_{I_B}} &= \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta{}S_B + \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta\epsilon{}S_V + \lambda_{I_B}\left(\mu + f_B\eta\right) \begingroup\color{ctcoloraccessory} - 2\lambda_yh\theta(h)f_B \endgroup \\
+    \dot{\lambda}_{I_V} &= \left(\lambda_{S_V} - \lambda_{I_V}\right)\beta{}S_V + \left(\lambda_{S_B} - \lambda_{I_B}\right)\beta\epsilon{}S_B + \lambda_{I_V}\left(\mu + f_V\eta\right) \begingroup\color{ctcoloraccessory} - 2\lambda_yh\theta(h)f_V \endgroup\;.
     \end{align}
 \end{subequations}
 Whilst this system could be solved without imposing the constraint when minimising the Hamiltonian, all the magenta terms in the above equations are zero when the chosen controls adhere to the budget constraint. This means that when imposing this constraint on Hamiltonian minimisation, the adjoint equations previously used are correct without considering the constraint. The simpler solution is therefore used to find the optimal control satisyfing the constraint.
@@ -200,7 +200,7 @@ A naive expectation might be that the strategy switch is caused by the region ge
 
 \subsection{Formulation comparison}
 
-The switch time, if there is one, can be easily extracted from an optimised solution, and so can be used to compare the direct and indirect approaches. Figure~\ref{fig:ch3:beta_scan}(a) shows that in general the two methods agree, but for some parameters the indirect FBSM does not find an optimal switching strategy where the direct method does. As shown in Figure~\ref{fig:ch3:beta_scan}(b), the direct method is more accurate as the switching strategy is optimal. Because of the difficulties with convergence using the indirect approach, the FBSM can converge on suboptimal solutions more frequently than the direct method.
+The switch time, if there is one, can easily be extracted from an optimised solution, and so can be used to compare the direct and indirect approaches. Figure~\ref{fig:ch3:beta_scan}(a) shows that in general the two methods agree, but for some parameters the indirect FBSM does not find an optimal switching strategy where the direct method does. As shown in Figure~\ref{fig:ch3:beta_scan}(b), the direct method is more accurate as the switching strategy is optimal. Because of the difficulties with convergence using the indirect approach, the FBSM can converge on suboptimal solutions more frequently than the direct method.
 
 Other convergence issues are also seen with the FBSM, causing significantly slower convergence than using the direct method. For example, the optimisation underlying the strategy in Figure~\ref{fig:ch3:general_strat} takes \SI{11.7}{\second} using the direct approach, whereas for the same time resolution the indirect approach takes \SI{98}{\second}. Both measurements were made using a \SI{4.0}{\giga\hertz} Intel Core i7-4790K with \SI{32}{\giga\byte} of RAM. In many cases the FBSM also fails to converge to a solution.
 
@@ -217,13 +217,15 @@ Figure~\ref{fig:ch3:sens_1} shows the response of the switch time from the direc
     \end{center}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[p]
     \begin{center}
         \makebox[\textwidth][c]{\includegraphics{Graphics/Ch3/InitCondPolicy}}
         \caption[Switch time sensitivity to spread rate]{Sensitivity of the optimal strategy to the rate of infection spread, using the direct method and default parameters. \textbf{(a)} shows the switch time as a function of the infection rate and the initial number of infected hosts in the buffer region. \textbf{(b)} shows the effect of the infection rate and the external force of infection on the buffer region, with a single initially infected host in the buffer region. The grey region shows cases where multiple switches are identified. For both \textbf{(a)} and \textbf{(b)}, as the epidemic invades faster in the buffer region (moving up the y axes) the switching strategy becomes less beneficial. The shape of the response is affected by where the maximum expenditure rate becomes limiting, with the budget becoming more limiting towards the upper right corners. A diagonal line separates regimes where maximum control is possible from cases where the maximum expenditure rate is limiting. Cases A, B and C are highlighted in \textbf{(b)}, and control expenditure and DPCs are shown for each of these in \textbf{(c)}, \textbf{(d)} and \textbf{(e)}. Case A finds a switch but as the budget is not limiting, it has no effect. In case B the budget is limiting so the switch has an effect. In case C there is an additional switch early in the epidemic, but since the budget is not limiting at that point it has no effect.\label{fig:ch3:sens_1}}
     \end{center}
 \end{figure}
 
+\FloatBarrier
+\newpage
 \subsection{Testing robustness}
 
 Finally, we test how these optimal strategies perform when the underlying model is not known accurately. We introduce a systematic error into the infection rate of the model used to optimise the control strategy. The resulting optimal control specifies an expenditure over time ($f_i(t)I_i(t)$ for each region) which is applied to a model with the correct infection rate. The results are shown in Figure~\ref{fig:ch3:robust}. Larger errors in the infection rate lead to worse control of the epidemic. For large underestimates of the infection rate, the optimised control is worse than simply allocating the full budget to the high value region, with no treatment in the buffer region. The optimised control strategies lead to wasted resources that could be better allocated to the other region (Figure~\ref{fig:ch3:robust}(c)).
